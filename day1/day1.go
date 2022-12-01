@@ -39,7 +39,7 @@ func solvePart2(lines []string) int {
 		topCals += elves[i].totalCalories
 	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 1, Part 1 (%dms): Top 3 Calories = %d", end-start, topCals)
+	log.Printf("Day 1, Part 2 (%dms): Top 3 Calories = %d", end-start, topCals)
 	return topCals
 }
 

@@ -21,11 +21,12 @@ func ReadLines(dir string, filename string) []string {
 	return values
 }
 
-// Number parses the supplied string into number
+// Number parses the supplied string into number. Will exit process
+// if the supplied string is not a number.
 func Number(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
-		log.Fatalln("bad coordinate received: ", s)
+		log.Fatalf("bad number received: [%s]", s)
 	}
 	return n
 }
