@@ -72,7 +72,7 @@ func TestRuneToPlay(t *testing.T) {
 func TestRuneToOutcome(t *testing.T) {
 	tests := []struct {
 		input    rune
-		expected int
+		expected Outcome
 	}{
 		{'X', Loss},
 		{'Y', Tie},
@@ -89,7 +89,7 @@ func TestRuneToOutcome(t *testing.T) {
 func TestPlayForOutcome(t *testing.T) {
 	tests := []struct {
 		oppPlay  Play
-		outcome  int
+		outcome  Outcome
 		expected Play
 	}{
 		{Rock, Win, Paper},

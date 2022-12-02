@@ -43,33 +43,34 @@ func solvePart2(lines []string) int {
 }
 
 type Play int
+type Outcome int
 
 const (
 	Rock     Play = 1
 	Paper    Play = 2
 	Scissors Play = 3
 
-	Win  int = 6
-	Tie  int = 3
-	Loss int = 0
+	Win  Outcome = 6
+	Tie  Outcome = 3
+	Loss Outcome = 0
 )
 
 func score(play Play, opp Play) int {
 	switch {
 	case play == Rock && opp == Paper:
-		return Loss + int(Rock)
+		return int(Loss) + int(Rock)
 	case play == Rock && opp == Scissors:
-		return Win + int(Rock)
+		return int(Win) + int(Rock)
 	case play == Paper && opp == Rock:
-		return Win + int(Paper)
+		return int(Win) + int(Paper)
 	case play == Paper && opp == Scissors:
-		return Loss + int(Paper)
+		return int(Loss) + int(Paper)
 	case play == Scissors && opp == Rock:
-		return Loss + int(Scissors)
+		return int(Loss) + int(Scissors)
 	case play == Scissors && opp == Paper:
-		return Win + int(Scissors)
+		return int(Win) + int(Scissors)
 	}
-	return Tie + int(play)
+	return int(Tie) + int(play)
 }
 
 func runeToPlay(r rune) Play {
@@ -83,7 +84,7 @@ func runeToPlay(r rune) Play {
 	}
 }
 
-func runeToOutcome(r rune) int {
+func runeToOutcome(r rune) Outcome {
 	switch r {
 	case 'X':
 		return Loss
@@ -94,7 +95,7 @@ func runeToOutcome(r rune) int {
 	}
 }
 
-func playForOutcome(opp Play, outcome int) Play {
+func playForOutcome(opp Play, outcome Outcome) Play {
 	switch {
 	case outcome == Win && opp == Rock:
 		return Paper
