@@ -24,7 +24,7 @@ func solvePart1(lines []string) int {
 		totalScore += score(play, opp)
 	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 1, Part 1 (%dms): Score = %d", end-start, totalScore)
+	log.Printf("Day 2, Part 1 (%dms): Score = %d", end-start, totalScore)
 	return totalScore
 }
 
@@ -38,7 +38,7 @@ func solvePart2(lines []string) int {
 		totalScore += score(play, opp)
 	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 1, Part 2 (%dms): Score = %d", end-start, totalScore)
+	log.Printf("Day 2, Part 2 (%dms): Score = %d", end-start, totalScore)
 	return totalScore
 }
 
