@@ -1,10 +1,11 @@
 package day6
 
 import (
-	"advent-of-code-2022/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"advent-of-code-2022/utils"
 )
 
 func TestSolvePart1(t *testing.T) {

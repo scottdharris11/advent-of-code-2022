@@ -1,9 +1,10 @@
 package day6
 
 import (
-	"advent-of-code-2022/utils"
 	"log"
 	"time"
+
+	"advent-of-code-2022/utils"
 )
 
 type Puzzle struct{}
