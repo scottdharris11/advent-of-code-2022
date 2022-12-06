@@ -1,12 +1,12 @@
 package utils
 
 type Stack struct {
-	count  int
-	crates []interface{}
+	count int
+	items []interface{}
 }
 
 func (s *Stack) Push(c interface{}) {
-	s.crates = append(s.crates, c)
+	s.items = append(s.items, c)
 	s.count++
 }
 
@@ -15,8 +15,8 @@ func (s *Stack) Pop() interface{} {
 		return nil
 	}
 	i := s.count - 1
-	c := s.crates[i]
-	s.crates = s.crates[:i]
+	c := s.items[i]
+	s.items = s.items[:i]
 	s.count--
 	return c
 }
@@ -26,5 +26,5 @@ func (s *Stack) Peek() interface{} {
 		return nil
 	}
 	i := s.count - 1
-	return s.crates[i]
+	return s.items[i]
 }
