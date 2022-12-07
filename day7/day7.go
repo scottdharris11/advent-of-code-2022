@@ -19,13 +19,13 @@ func (Puzzle) Solve() {
 func solvePart1(lines []string) int {
 	start := time.Now().UnixMilli()
 	tree := parseTree(lines)
-	ans := findDirectoriesUnderSize(tree, 100000)
+	ans := sumDirectoriesUnderSize(tree, 100000)
 	end := time.Now().UnixMilli()
 	log.Printf("Day 7, Part 1 (%dms): Dir Sum = %d", end-start, ans)
 	return ans
 }
 
-func findDirectoriesUnderSize(dir *Item, limit int) int {
+func sumDirectoriesUnderSize(dir *Item, limit int) int {
 	ans := 0
 	s := dir.Size()
 	if s < limit {
@@ -33,7 +33,7 @@ func findDirectoriesUnderSize(dir *Item, limit int) int {
 	}
 	for _, c := range dir.children {
 		if c.directory {
-			ans += findDirectoriesUnderSize(c, limit)
+			ans += sumDirectoriesUnderSize(c, limit)
 		}
 	}
 	return ans
@@ -55,6 +55,9 @@ func solvePart2(lines []string) int {
 func findSmallestDirToDelete(dir *Item, free int, smallest *Item) *Item {
 	r := smallest
 	s := dir.Size()
+	if s < free {
+		return r
+	}
 	if s > free && s < smallest.Size() {
 		r = dir
 	}
