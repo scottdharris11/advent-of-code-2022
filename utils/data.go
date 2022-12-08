@@ -21,6 +21,19 @@ func ReadLines(dir string, filename string) []string {
 	return values
 }
 
+// ReadIntegerGrid reads grid of integers from set of lines
+func ReadIntegerGrid(lines []string) [][]int {
+	var grid [][]int
+	for _, line := range lines {
+		var gridRow []int
+		for _, r := range line {
+			gridRow = append(gridRow, int(r-'0'))
+		}
+		grid = append(grid, gridRow)
+	}
+	return grid
+}
+
 // Number parses the supplied string into number. Will exit process
 // if the supplied string is not a number.
 func Number(s string) int {
