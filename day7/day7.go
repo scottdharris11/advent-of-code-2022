@@ -74,7 +74,7 @@ type Item struct {
 	size      int
 	directory bool
 	parent    *Item
-	children  []*Item
+	children  map[string]*Item
 }
 
 func (i *Item) Size() int {
@@ -91,18 +91,14 @@ func (i *Item) Directory(name string) *Item {
 	if name == ".." {
 		return i.parent
 	}
-	for _, c := range i.children {
-		if c.name == name {
-			return c
-		}
-	}
-	return nil
+	return i.children[name]
 }
 
 func parseTree(lines []string) *Item {
 	root := &Item{
 		name:      "/",
 		directory: true,
+		children:  map[string]*Item{},
 	}
 	var currentDir *Item
 	for _, line := range lines {
@@ -121,11 +117,18 @@ func parseTree(lines []string) *Item {
 			s := strings.Split(line, " ")
 			switch s[0] {
 			case "dir":
-				d := &Item{name: s[1], directory: true, parent: currentDir}
-				currentDir.children = append(currentDir.children, d)
+				currentDir.children[s[1]] = &Item{
+					name:      s[1],
+					directory: true,
+					parent:    currentDir,
+					children:  map[string]*Item{},
+				}
 			default:
-				f := &Item{name: s[1], parent: currentDir, size: utils.Number(s[0])}
-				currentDir.children = append(currentDir.children, f)
+				currentDir.children[s[1]] = &Item{
+					name:   s[1],
+					parent: currentDir,
+					size:   utils.Number(s[0]),
+				}
 			}
 		}
 	}
