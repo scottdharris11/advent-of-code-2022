@@ -9,6 +9,7 @@ import (
 	"advent-of-code-2022/day6"
 	"advent-of-code-2022/day7"
 	"advent-of-code-2022/day8"
+	"advent-of-code-2022/day9"
 )
 
 type Solver interface {
@@ -18,7 +19,7 @@ type Solver interface {
 func main() {
 	solvers := []Solver{
 		day1.Puzzle{}, day2.Puzzle{}, day3.Puzzle{}, day4.Puzzle{}, day5.Puzzle{},
-		day6.Puzzle{}, day7.Puzzle{}, day8.Puzzle{},
+		day6.Puzzle{}, day7.Puzzle{}, day8.Puzzle{}, day9.Puzzle{},
 	}
 	for _, solver := range solvers {
 		solver.Solve()
