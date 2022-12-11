@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 // ReadLines read lines from data file as strings
@@ -34,12 +35,22 @@ func ReadIntegerGrid(lines []string) [][]int {
 	return grid
 }
 
-// Number parses the supplied string into number. Will exit process
-// if the supplied string is not a number.
+// ReadIntegersFromLine parses integers on a single line from csv format
+func ReadIntegersFromLine(line string) []int {
+	sValues := strings.Split(line, ", ")
+	var values []int
+	for _, sValue := range sValues {
+		values = append(values, Number(sValue))
+	}
+	return values
+}
+
+// Number parses the supplied string into number. Will return 0
+// if value is not a number
 func Number(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
-		log.Fatalf("bad number received: [%s]", s)
+		return 0
 	}
 	return n
 }
