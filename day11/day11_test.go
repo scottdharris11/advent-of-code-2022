@@ -45,7 +45,7 @@ func TestSolvePart1(t *testing.T) {
 
 func TestSolvePart2(t *testing.T) {
 	assert.Equal(t, int64(2713310158), solvePart2(testLines))
-	assert.Equal(t, int64(0), solvePart2(utils.ReadLines("day11", "day-11-input.txt")))
+	assert.Equal(t, int64(17926061332), solvePart2(utils.ReadLines("day11", "day-11-input.txt")))
 }
 
 func TestParseMonkeys(t *testing.T) {
@@ -235,7 +235,7 @@ func TestExecuteRound(t *testing.T) {
 
 func TestExecuteRound_NoRelief(t *testing.T) {
 	m0 := &Monkey{
-		reliefFactor: 0,
+		reliefFactor: 1,
 		items:        []int64{79, 98},
 		worryChange:  Operation{math: Multiply, constant: 19},
 		worryTest:    Operation{math: Modulus, constant: 23},
@@ -243,7 +243,7 @@ func TestExecuteRound_NoRelief(t *testing.T) {
 		throwFalse:   3,
 	}
 	m1 := &Monkey{
-		reliefFactor: 0,
+		reliefFactor: 1,
 		items:        []int64{54, 65, 75, 74},
 		worryChange:  Operation{math: Add, constant: 6},
 		worryTest:    Operation{math: Modulus, constant: 19},
@@ -251,7 +251,7 @@ func TestExecuteRound_NoRelief(t *testing.T) {
 		throwFalse:   0,
 	}
 	m2 := &Monkey{
-		reliefFactor: 0,
+		reliefFactor: 1,
 		items:        []int64{79, 60, 97},
 		worryChange:  Operation{math: Multiply, constant: 0},
 		worryTest:    Operation{math: Modulus, constant: 13},
@@ -259,7 +259,7 @@ func TestExecuteRound_NoRelief(t *testing.T) {
 		throwFalse:   3,
 	}
 	m3 := &Monkey{
-		reliefFactor: 0,
+		reliefFactor: 1,
 		items:        []int64{74},
 		worryChange:  Operation{math: Add, constant: 3},
 		worryTest:    Operation{math: Modulus, constant: 17},
@@ -267,6 +267,7 @@ func TestExecuteRound_NoRelief(t *testing.T) {
 		throwFalse:   1,
 	}
 	monkeys := []*Monkey{m0, m1, m2, m3}
+	adjustReliefFactor(monkeys)
 
 	executeRound(monkeys)
 
@@ -292,6 +293,42 @@ func TestExecuteRound_NoRelief(t *testing.T) {
 	assert.Equal(t, 4792, m1.inspectedCnt)
 	assert.Equal(t, 199, m2.inspectedCnt)
 	assert.Equal(t, 5192, m3.inspectedCnt)
+
+	for i := 0; i < 1000; i++ {
+		executeRound(monkeys)
+	}
+
+	assert.Equal(t, 10419, m0.inspectedCnt)
+	assert.Equal(t, 9577, m1.inspectedCnt)
+	assert.Equal(t, 392, m2.inspectedCnt)
+	assert.Equal(t, 10391, m3.inspectedCnt)
+
+	for i := 0; i < 1000; i++ {
+		executeRound(monkeys)
+	}
+
+	assert.Equal(t, 15638, m0.inspectedCnt)
+	assert.Equal(t, 14358, m1.inspectedCnt)
+	assert.Equal(t, 587, m2.inspectedCnt)
+	assert.Equal(t, 15593, m3.inspectedCnt)
+
+	for i := 0; i < 1000; i++ {
+		executeRound(monkeys)
+	}
+
+	assert.Equal(t, 20858, m0.inspectedCnt)
+	assert.Equal(t, 19138, m1.inspectedCnt)
+	assert.Equal(t, 780, m2.inspectedCnt)
+	assert.Equal(t, 20797, m3.inspectedCnt)
+
+	for i := 0; i < 6000; i++ {
+		executeRound(monkeys)
+	}
+
+	assert.Equal(t, 52166, m0.inspectedCnt)
+	assert.Equal(t, 47830, m1.inspectedCnt)
+	assert.Equal(t, 1938, m2.inspectedCnt)
+	assert.Equal(t, 52013, m3.inspectedCnt)
 }
 
 func TestMonkey_InspectItems(t *testing.T) {
@@ -314,6 +351,25 @@ func TestMonkey_InspectItems(t *testing.T) {
 	assert.Equal(t, 0, len(m1.items))
 	assert.Equal(t, 0, len(m2.items))
 	assert.Equal(t, []int64{500, 620}, m3.items)
+}
+
+func TestMonkey_ApplyRelief(t *testing.T) {
+	tests := []struct {
+		monkey   Monkey
+		input    int64
+		expected int64
+	}{
+		{Monkey{reliefFactor: 3, worryTest: Operation{constant: 23}}, 1501, 500},
+		{Monkey{reliefFactor: 3, worryTest: Operation{constant: 23}}, 1862, 620},
+		{Monkey{reliefByMod: true, reliefFactor: 23, worryTest: Operation{constant: 23}}, 1501, 6},
+		{Monkey{reliefByMod: true, reliefFactor: 23, worryTest: Operation{constant: 23}}, 1862, 22},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
+			assert.Equal(t, tt.expected, tt.monkey.applyRelief(tt.input))
+		})
+	}
 }
 
 func TestNewMonkey(t *testing.T) {

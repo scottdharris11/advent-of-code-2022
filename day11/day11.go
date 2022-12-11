@@ -31,9 +31,7 @@ func solvePart1(lines []string) int64 {
 func solvePart2(lines []string) int64 {
 	start := time.Now().UnixMilli()
 	monkeys := parseMonkeys(lines)
-	for _, m := range monkeys {
-		m.reliefFactor = 0
-	}
+	adjustReliefFactor(monkeys)
 	for i := 0; i < 10000; i++ {
 		executeRound(monkeys)
 	}
@@ -53,6 +51,22 @@ func parseMonkeys(lines []string) []*Monkey {
 	return monkeys
 }
 
+func adjustReliefFactor(monkeys []*Monkey) {
+	// compute the relief factor by using the product of all the worry test values
+	// to enable modulus operations that will keep the integrity of the values
+	// while maintaining a small number.
+	r := 1
+	for _, m := range monkeys {
+		r *= m.worryTest.constant
+	}
+
+	// apply the updated factor to all the monkeys
+	for _, m := range monkeys {
+		m.reliefByMod = true
+		m.reliefFactor = r
+	}
+}
+
 func monkeyBusiness(monkeys []*Monkey) int64 {
 	var i []int
 	for _, m := range monkeys {
@@ -69,6 +83,7 @@ func executeRound(monkeys []*Monkey) {
 }
 
 type Monkey struct {
+	reliefByMod  bool
 	reliefFactor int
 	items        []int64
 	worryChange  Operation
@@ -86,9 +101,7 @@ func (m *Monkey) inspectItems(monkeys []*Monkey) {
 	for _, i := range m.items {
 		m.inspectedCnt++
 		worry := m.worryChange.execute(i)
-		if m.reliefFactor > 0 {
-			worry /= int64(m.reliefFactor)
-		}
+		worry = m.applyRelief(worry)
 		switch m.worryTest.execute(worry) == 0 {
 		case true:
 			monkeys[m.throwTrue].addItem(worry)
@@ -97,6 +110,17 @@ func (m *Monkey) inspectItems(monkeys []*Monkey) {
 		}
 	}
 	m.items = m.items[:0]
+}
+
+func (m *Monkey) applyRelief(worry int64) int64 {
+	w := worry
+	switch m.reliefByMod {
+	case true:
+		w %= int64(m.reliefFactor)
+	case false:
+		w /= int64(m.reliefFactor)
+	}
+	return w
 }
 
 func NewMonkey(lines []string) *Monkey {
