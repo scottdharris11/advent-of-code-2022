@@ -28,9 +28,21 @@ func solvePart1(grid []string) int {
 
 func solvePart2(grid []string) int {
 	start := time.Now().UnixMilli()
-	ans := len(grid)
+	rp := NewRoutePlanner(grid)
+	ans := rp.Route()
+	for y := 0; y < len(grid); y++ {
+		for x := 0; x < len(grid[0]); x++ {
+			if rune(grid[y][x]) == 'a' {
+				rp.startLocation = Position{x: x, y: y}
+				s := rp.Route()
+				if s > -1 && s < ans {
+					ans = s
+				}
+			}
+		}
+	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 12, Part 2 (%dms): Shortest Route = %d", end-start, ans)
+	log.Printf("Day 12, Part 2 (%dms): Most Scenic Route = %d", end-start, ans)
 	return ans
 }
 
@@ -66,6 +78,9 @@ func (r *RoutePlanner) Route() int {
 			currentY: r.startLocation.y,
 		},
 	})
+	if solution == nil {
+		return -1
+	}
 	return solution.Cost
 }
 

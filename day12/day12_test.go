@@ -23,8 +23,8 @@ func TestSolvePart1(t *testing.T) {
 }
 
 func TestSolvePart2(t *testing.T) {
-	// assert.Equal(t, 0, solvePart2(testGrid))
-	// assert.Equal(t, 0, solvePart2(utils.ReadLines("day12", "day-12-input.txt")))
+	assert.Equal(t, 29, solvePart2(testGrid))
+	assert.Equal(t, 446, solvePart2(utils.ReadLines("day12", "day-12-input.txt")))
 }
 
 func TestNewRoutePlanner(t *testing.T) {
