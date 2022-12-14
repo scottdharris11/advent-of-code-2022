@@ -2,6 +2,8 @@ package day13
 
 import (
 	"log"
+	"reflect"
+	"sort"
 	"time"
 
 	"advent-of-code-2022/utils"
@@ -34,9 +36,24 @@ func solvePart1(lines []string) int {
 
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
-	ans := len(lines)
+	packets := orderedPackets(append(lines, []string{"[[2]]", "[[6]]"}...))
+	div1Marker := NewPacket("[[2]]")
+	div2Marker := NewPacket("[[6]]")
+	div1Idx := 0
+	div2Idx := 0
+	for i, p := range packets {
+		if reflect.DeepEqual(p, div1Marker) {
+			div1Idx = i + 1
+			continue
+		}
+		if reflect.DeepEqual(p, div2Marker) {
+			div2Idx = i + 1
+			break
+		}
+	}
+	ans := div1Idx * div2Idx
 	end := time.Now().UnixMilli()
-	log.Printf("Day 13, Part 2 (%dms): Answer = %d", end-start, ans)
+	log.Printf("Day 13, Part 2 (%dms): Decoder Key = %d", end-start, ans)
 	return ans
 }
 
@@ -126,4 +143,32 @@ func NewPacket(s string) *Packet {
 		}
 	}
 	return p
+}
+
+func orderedPackets(lines []string) []*Packet {
+	var packets []*Packet
+	for _, l := range lines {
+		if l == "" {
+			continue
+		}
+		packets = append(packets, NewPacket(l))
+	}
+
+	oList := packetList(packets)
+	sort.Sort(oList)
+	return oList
+}
+
+type packetList []*Packet
+
+func (p packetList) Len() int {
+	return len(p)
+}
+
+func (p packetList) Less(i, j int) bool {
+	return p[i].compare(*p[j]) < 0
+}
+
+func (p packetList) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
 }

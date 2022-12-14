@@ -40,6 +40,11 @@ func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, 6187, solvePart1(utils.ReadLines("day13", "day-13-input.txt")))
 }
 
+func TestSolvePart2(t *testing.T) {
+	assert.Equal(t, 140, solvePart2(testLines))
+	assert.Equal(t, 23520, solvePart2(utils.ReadLines("day13", "day-13-input.txt")))
+}
+
 func TestPacket_Ordered(t *testing.T) {
 	tests := []struct {
 		left    Packet
@@ -143,4 +148,127 @@ func TestNewPacket(t *testing.T) {
 			assert.Equal(t, tt.output, *NewPacket(tt.input))
 		})
 	}
+}
+
+func TestOrderedPackets(t *testing.T) {
+	assert.Equal(t, []*Packet{
+		{value: -1},
+		{value: -1, values: []*Packet{
+			{value: -1},
+		}},
+		{value: -1, values: []*Packet{
+			{value: -1, values: []*Packet{
+				{value: -1},
+			}},
+		}},
+		{value: -1, values: []*Packet{
+			{value: 1},
+			{value: 1},
+			{value: 3},
+			{value: 1},
+			{value: 1},
+		}},
+		{value: -1, values: []*Packet{
+			{value: 1},
+			{value: 1},
+			{value: 5},
+			{value: 1},
+			{value: 1},
+		}},
+		{value: -1, values: []*Packet{
+			{value: -1, values: []*Packet{
+				{value: 1},
+			}},
+			{value: -1, values: []*Packet{
+				{value: 2},
+				{value: 3},
+				{value: 4},
+			}},
+		}},
+		{value: -1, values: []*Packet{
+			{value: 1},
+			{value: -1, values: []*Packet{
+				{value: 2},
+				{value: -1, values: []*Packet{
+					{value: 3},
+					{value: -1, values: []*Packet{
+						{value: 4},
+						{value: -1, values: []*Packet{
+							{value: 5},
+							{value: 6},
+							{value: 0},
+						}},
+					}},
+				}},
+			}},
+			{value: 8},
+			{value: 9},
+		}},
+		{value: -1, values: []*Packet{
+			{value: 1},
+			{value: -1, values: []*Packet{
+				{value: 2},
+				{value: -1, values: []*Packet{
+					{value: 3},
+					{value: -1, values: []*Packet{
+						{value: 4},
+						{value: -1, values: []*Packet{
+							{value: 5},
+							{value: 6},
+							{value: 7},
+						}},
+					}},
+				}},
+			}},
+			{value: 8},
+			{value: 9},
+		}},
+		{value: -1, values: []*Packet{
+			{value: -1, values: []*Packet{
+				{value: 1},
+			}},
+			{value: 4},
+		}},
+		{value: -1, values: []*Packet{
+			{value: 3},
+		}},
+		{value: -1, values: []*Packet{
+			{value: -1, values: []*Packet{
+				{value: 4},
+				{value: 4},
+			}},
+			{value: 4},
+			{value: 4},
+		}},
+		{value: -1, values: []*Packet{
+			{value: -1, values: []*Packet{
+				{value: 4},
+				{value: 4},
+			}},
+			{value: 4},
+			{value: 4},
+			{value: 4},
+		}},
+		{value: -1, values: []*Packet{
+			{value: 7},
+			{value: 7},
+			{value: 7},
+		}},
+		{value: -1, values: []*Packet{
+			{value: 7},
+			{value: 7},
+			{value: 7},
+			{value: 7},
+		}},
+		{value: -1, values: []*Packet{
+			{value: -1, values: []*Packet{
+				{value: 8},
+				{value: 7},
+				{value: 6},
+			}},
+		}},
+		{value: -1, values: []*Packet{
+			{value: 9},
+		}},
+	}, orderedPackets(testLines))
 }
