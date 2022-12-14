@@ -1,6 +1,8 @@
 package day13
 
 import (
+	"advent-of-code-2022/utils"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,13 +34,45 @@ var testLines = []string{
 	"[1,[2,[3,[4,[5,6,0]]]],8,9]",
 }
 
+func TestSolvePart1(t *testing.T) {
+	assert.Equal(t, 13, solvePart1(testLines))
+	assert.Equal(t, 4306, solvePart1(utils.ReadLines("day13", "day-13-input.txt")))
+}
+
+func TestPacket_Ordered(t *testing.T) {
+	tests := []struct {
+		left    Packet
+		right   Packet
+		ordered bool
+	}{
+		{*NewPacket("[1,1,5,1,1]"), *NewPacket("[1,1,5,1,1]"), true},
+		{*NewPacket("[1,1,3,1,1]"), *NewPacket("[1,1,5,1,1]"), true},
+		{*NewPacket("[[1],[2,3,4]]"), *NewPacket("[[1],4]"), true},
+		{*NewPacket("[9]"), *NewPacket("[[8,7,6]]"), false},
+		{*NewPacket("[[4,4],4,4]"), *NewPacket("[[4,4],4,4,4]"), true},
+		{*NewPacket("[7,7,7,7]"), *NewPacket("[7,7,7]"), false},
+		{*NewPacket("[]"), *NewPacket("[3]"), true},
+		{*NewPacket("[[[]]]"), *NewPacket("[[]]"), false},
+		{*NewPacket("[1,[2,[3,[4,[5,6,7]]]],8,9]"), *NewPacket("[1,[2,[3,[4,[5,6,0]]]],8,9]"), false},
+		{*NewPacket("[[[2,3],3],[10,4,[[10,8,4,6,9],5],[8,[0,9,5,5,4],3]]]"), *NewPacket("[[0],[[[1]]],[1,9,2,2,[[4],4,8]],[]]"), false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test %v", tt.left), func(t *testing.T) {
+			assert.Equal(t, tt.ordered, tt.left.Ordered(tt.right))
+		})
+	}
+}
+
 func TestNewPacket(t *testing.T) {
 	tests := []struct {
 		input  string
 		output Packet
 	}{
 		{"[]", Packet{value: -1}},
-		{"[3]", Packet{value: 3}},
+		{"[3]", Packet{value: -1, values: []*Packet{
+			{value: 3},
+		}}},
 		{"[1,1,3,1,1]", Packet{value: -1, values: []*Packet{
 			{value: 1},
 			{value: 1},
@@ -47,7 +81,9 @@ func TestNewPacket(t *testing.T) {
 			{value: 1},
 		}}},
 		{"[[1],[2,3,4]]", Packet{value: -1, values: []*Packet{
-			{value: 1},
+			{value: -1, values: []*Packet{
+				{value: 1},
+			}},
 			{value: -1, values: []*Packet{
 				{value: 2},
 				{value: 3},
@@ -55,7 +91,9 @@ func TestNewPacket(t *testing.T) {
 			}},
 		}}},
 		{"[[1],4]", Packet{value: -1, values: []*Packet{
-			{value: 1},
+			{value: -1, values: []*Packet{
+				{value: 1},
+			}},
 			{value: 4},
 		}}},
 		{"[[8,7,6]]", Packet{value: -1, values: []*Packet{
