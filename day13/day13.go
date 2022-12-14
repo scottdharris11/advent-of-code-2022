@@ -46,7 +46,7 @@ type Packet struct {
 }
 
 func (p Packet) Ordered(p2 Packet) bool {
-	return p.compare(p2) <= 0
+	return p.compare(p2) < 0
 }
 
 func (p Packet) compare(p2 Packet) int {
@@ -83,6 +83,9 @@ func (p Packet) compare(p2 Packet) int {
 		return c
 	}
 
+	if len(left) < len(right) {
+		return -1
+	}
 	return 0
 }
 
