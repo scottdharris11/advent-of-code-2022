@@ -1,9 +1,9 @@
 package day12
 
 import (
-	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"advent-of-code-2022/utils"
@@ -28,19 +28,28 @@ func solvePart1(grid []string) int {
 
 func solvePart2(grid []string) int {
 	start := time.Now().UnixMilli()
-	rp := NewRoutePlanner(grid)
-	ans := rp.Route()
+	mu := &sync.Mutex{}
+	wg := sync.WaitGroup{}
+	ans := NewRoutePlanner(grid).Route()
 	for y := 0; y < len(grid); y++ {
 		for x := 0; x < len(grid[0]); x++ {
 			if rune(grid[y][x]) == 'a' {
-				rp.startLocation = Position{x: x, y: y}
-				s := rp.Route()
-				if s > -1 && s < ans {
-					ans = s
-				}
+				wg.Add(1)
+				go func(x int, y int, mu *sync.Mutex) {
+					defer wg.Done()
+					rp := NewRoutePlanner(grid)
+					rp.startLocation = Position{x: x, y: y}
+					s := rp.Route()
+					mu.Lock()
+					if s > -1 && s < ans {
+						ans = s
+					}
+					mu.Unlock()
+				}(x, y, mu)
 			}
 		}
 	}
+	wg.Wait()
 	end := time.Now().UnixMilli()
 	log.Printf("Day 12, Part 2 (%dms): Most Scenic Route = %d", end-start, ans)
 	return ans
@@ -154,8 +163,4 @@ type RouteState struct {
 type Position struct {
 	x int
 	y int
-}
-
-func (p *Position) encode() string {
-	return fmt.Sprintf(`"%d::%d"`, p.x, p.y)
 }
