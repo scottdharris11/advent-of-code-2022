@@ -1,16 +1,99 @@
 package day14
 
 import (
+	"log"
 	"strings"
+	"time"
 
 	"advent-of-code-2022/utils"
 )
 
+type Puzzle struct{}
+
+func (Puzzle) Solve() {
+	input := utils.ReadLines("day14", "day-14-input.txt")
+	solvePart1(input)
+	solvePart2(input)
+}
+
+func solvePart1(lines []string) int {
+	start := time.Now().UnixMilli()
+	cave := parseCave(lines)
+	ans := 0
+	for {
+		if cave.DropSand() {
+			break
+		}
+		ans++
+	}
+	end := time.Now().UnixMilli()
+	log.Printf("Day 14, Part 1 (%dms): Sand Drops = %d", end-start, ans)
+	return ans
+}
+
+func solvePart2(lines []string) int {
+	start := time.Now().UnixMilli()
+	ans := len(lines)
+	end := time.Now().UnixMilli()
+	log.Printf("Day 14, Part 2 (%dms): Answer = %d", end-start, ans)
+	return ans
+}
+
+func parseCave(lines []string) Cave {
+	var rocks []Rock
+	for _, line := range lines {
+		rocks = append(rocks, NewRock(line))
+	}
+	return NewCave(rocks)
+}
+
 var Stone = '#'
+var Sand = 'o'
+var Empty = ' '
 
 type Cave struct {
 	xOffset int
+	maxX    int
+	maxY    int
 	grid    [][]rune
+}
+
+func (c *Cave) DropSand() bool {
+	sandX := 500 - c.xOffset
+	sandY := 0
+	for {
+		if c.offGrid(sandX, sandY+1) {
+			return true
+		}
+		switch c.grid[sandY+1][sandX] {
+		case Stone, Sand:
+			switch {
+			case c.offGrid(sandX-1, sandY+1):
+				return true
+			case c.canMoveTo(sandX-1, sandY+1):
+				sandX--
+				sandY++
+			case c.offGrid(sandX+1, sandY+1):
+				return true
+			case c.canMoveTo(sandX+1, sandY+1):
+				sandX++
+				sandY++
+			default:
+				c.grid[sandY][sandX] = Sand
+				return false
+			}
+		default:
+			sandY++
+		}
+	}
+}
+
+func (c *Cave) offGrid(x int, y int) bool {
+	return x < 0 || x > c.maxX || y > c.maxY
+}
+
+func (c *Cave) canMoveTo(x int, y int) bool {
+	return c.grid[y][x] == Empty
 }
 
 func NewCave(rocks []Rock) Cave {
@@ -70,6 +153,8 @@ func NewCave(rocks []Rock) Cave {
 
 	return Cave{
 		xOffset: minX,
+		maxX:    maxX - minX,
+		maxY:    maxY,
 		grid:    grid,
 	}
 }
