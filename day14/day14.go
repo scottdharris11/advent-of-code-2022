@@ -18,7 +18,7 @@ func (Puzzle) Solve() {
 
 func solvePart1(lines []string) int {
 	start := time.Now().UnixMilli()
-	cave := parseCave(lines)
+	cave := parseCave(lines, false)
 	ans := 0
 	for {
 		if cave.DropSand() {
@@ -33,18 +33,25 @@ func solvePart1(lines []string) int {
 
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
-	ans := len(lines)
+	cave := parseCave(lines, true)
+	ans := 0
+	for {
+		if cave.DropSand() {
+			break
+		}
+		ans++
+	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 14, Part 2 (%dms): Answer = %d", end-start, ans)
+	log.Printf("Day 14, Part 2 (%dms): Sand Drops = %d", end-start, ans)
 	return ans
 }
 
-func parseCave(lines []string) Cave {
+func parseCave(lines []string, floor bool) Cave {
 	var rocks []Rock
 	for _, line := range lines {
 		rocks = append(rocks, NewRock(line))
 	}
-	return NewCave(rocks)
+	return NewCave(rocks, floor)
 }
 
 var Stone = '#'
@@ -56,47 +63,82 @@ type Cave struct {
 	maxX    int
 	maxY    int
 	grid    [][]rune
+	floor   bool
 }
 
 func (c *Cave) DropSand() bool {
 	sandX := 500 - c.xOffset
 	sandY := 0
 	for {
-		if c.offGrid(sandX, sandY+1) {
+		if c.grid[sandY][sandX] == Sand {
 			return true
 		}
-		switch c.grid[sandY+1][sandX] {
+		if off, _ := c.offGrid(sandX, sandY+1); off {
+			return true
+		}
+		switch c.at(sandX, sandY+1) {
 		case Stone, Sand:
-			switch {
-			case c.offGrid(sandX-1, sandY+1):
+			off, adjusted := c.offGrid(sandX-1, sandY-1)
+			if off {
 				return true
-			case c.canMoveTo(sandX-1, sandY+1):
+			}
+			if adjusted {
+				sandX++
+			}
+			if c.canMoveTo(sandX-1, sandY+1) {
 				sandX--
 				sandY++
-			case c.offGrid(sandX+1, sandY+1):
+				break
+			}
+
+			if off, _ = c.offGrid(sandX+1, sandY+1); off {
 				return true
-			case c.canMoveTo(sandX+1, sandY+1):
+			}
+			if c.canMoveTo(sandX+1, sandY+1) {
 				sandX++
 				sandY++
-			default:
-				c.grid[sandY][sandX] = Sand
-				return false
+				break
 			}
+
+			c.grid[sandY][sandX] = Sand
+			return false
 		default:
 			sandY++
 		}
 	}
 }
 
-func (c *Cave) offGrid(x int, y int) bool {
-	return x < 0 || x > c.maxX || y > c.maxY
+func (c *Cave) offGrid(x int, y int) (bool, bool) {
+	if c.floor {
+		switch {
+		case x < 0:
+			for i := 0; i < len(c.grid); i++ {
+				c.grid[i] = append([]rune{Empty}, c.grid[i]...)
+			}
+			c.xOffset--
+			return false, true
+		case x > c.maxX:
+			for i := 0; i < len(c.grid); i++ {
+				c.grid[i] = append(c.grid[i], Empty)
+			}
+			return false, false
+		}
+	}
+	return x < 0 || x > c.maxX || y > c.maxY, false
 }
 
 func (c *Cave) canMoveTo(x int, y int) bool {
-	return c.grid[y][x] == Empty
+	return c.at(x, y) == Empty
 }
 
-func NewCave(rocks []Rock) Cave {
+func (c *Cave) at(x int, y int) rune {
+	if c.floor && y == c.maxY {
+		return Stone
+	}
+	return c.grid[y][x]
+}
+
+func NewCave(rocks []Rock, floor bool) Cave {
 	minX := -1
 	maxX := 0
 	maxY := 0
@@ -112,6 +154,10 @@ func NewCave(rocks []Rock) Cave {
 				maxY = p.y
 			}
 		}
+	}
+
+	if floor {
+		maxY += 2
 	}
 
 	var grid [][]rune
@@ -156,6 +202,7 @@ func NewCave(rocks []Rock) Cave {
 		maxX:    maxX - minX,
 		maxY:    maxY,
 		grid:    grid,
+		floor:   floor,
 	}
 }
 

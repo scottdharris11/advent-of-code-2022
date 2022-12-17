@@ -19,8 +19,8 @@ func TestSolvePart1(t *testing.T) {
 }
 
 func TestSolvePart2(t *testing.T) {
-	assert.Equal(t, 0, solvePart2(testInput))
-	assert.Equal(t, 0, solvePart2(utils.ReadLines("day14", "day-14-input.txt")))
+	assert.Equal(t, 93, solvePart2(testInput))
+	assert.Equal(t, 30367, solvePart2(utils.ReadLines("day14", "day-14-input.txt")))
 }
 
 func TestCave_DropSand(t *testing.T) {
@@ -64,6 +64,7 @@ func TestNewCave(t *testing.T) {
 		xOffset: 494,
 		maxX:    9,
 		maxY:    9,
+		floor:   false,
 		grid: [][]rune{
 			[]rune("          "),
 			[]rune("          "),
@@ -78,23 +79,53 @@ func TestNewCave(t *testing.T) {
 		},
 	}
 
+	caveWithFloor := Cave{
+		xOffset: 494,
+		maxX:    9,
+		maxY:    11,
+		floor:   true,
+		grid: [][]rune{
+			[]rune("          "),
+			[]rune("          "),
+			[]rune("          "),
+			[]rune("          "),
+			[]rune("    #   ##"),
+			[]rune("    #   # "),
+			[]rune("  ###   # "),
+			[]rune("        # "),
+			[]rune("        # "),
+			[]rune("######### "),
+			[]rune("          "),
+			[]rune("          "),
+		},
+	}
+
 	tests := []struct {
 		rocks    []Rock
+		floor    bool
 		expected Cave
 	}{
 		{[]Rock{
 			{[]Point{{498, 4}, {498, 6}, {496, 6}}},
 			{[]Point{{503, 4}, {502, 4}, {502, 9}, {494, 9}}},
-		}, cave},
+		}, false, cave},
 		{[]Rock{
 			{[]Point{{496, 6}, {498, 6}, {498, 4}}},
 			{[]Point{{494, 9}, {502, 9}, {502, 4}, {503, 4}}},
-		}, cave},
+		}, false, cave},
+		{[]Rock{
+			{[]Point{{498, 4}, {498, 6}, {496, 6}}},
+			{[]Point{{503, 4}, {502, 4}, {502, 9}, {494, 9}}},
+		}, true, caveWithFloor},
+		{[]Rock{
+			{[]Point{{496, 6}, {498, 6}, {498, 4}}},
+			{[]Point{{494, 9}, {502, 9}, {502, 4}, {503, 4}}},
+		}, true, caveWithFloor},
 	}
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			assert.Equal(t, tt.expected, NewCave(tt.rocks))
+			assert.Equal(t, tt.expected, NewCave(tt.rocks, tt.floor))
 		})
 	}
 }
