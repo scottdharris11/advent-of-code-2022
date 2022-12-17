@@ -30,7 +30,7 @@ func solvePart1(lines []string) int {
 		pair++
 	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 12, Part 1 (%dms): Ordered = %d", end-start, ans)
+	log.Printf("Day 13, Part 1 (%dms): Ordered = %d", end-start, ans)
 	return ans
 }
 
