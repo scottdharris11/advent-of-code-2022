@@ -77,6 +77,8 @@ func TestNewCave(t *testing.T) {
 			[]rune("        # "),
 			[]rune("######### "),
 		},
+		lSand: make([]int, 9),
+		rSand: make([]int, 9),
 	}
 
 	caveWithFloor := Cave{
@@ -98,6 +100,8 @@ func TestNewCave(t *testing.T) {
 			[]rune("          "),
 			[]rune("          "),
 		},
+		lSand: make([]int, 11),
+		rSand: make([]int, 11),
 	}
 
 	tests := []struct {

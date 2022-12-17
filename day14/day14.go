@@ -63,6 +63,8 @@ type Cave struct {
 	maxX    int
 	maxY    int
 	grid    [][]rune
+	lSand   []int
+	rSand   []int
 	floor   bool
 }
 
@@ -70,61 +72,37 @@ func (c *Cave) DropSand() bool {
 	sandX := 500 - c.xOffset
 	sandY := 0
 	for {
-		if c.grid[sandY][sandX] == Sand {
-			return true
-		}
-		if off, _ := c.offGrid(sandX, sandY+1); off {
+		if c.at(sandX, sandY) == Sand || c.offGrid(sandX, sandY+1) {
 			return true
 		}
 		switch c.at(sandX, sandY+1) {
 		case Stone, Sand:
-			off, adjusted := c.offGrid(sandX-1, sandY-1)
-			if off {
+			switch {
+			case c.offGrid(sandX-1, sandY-1):
 				return true
-			}
-			if adjusted {
-				sandX++
-			}
-			if c.canMoveTo(sandX-1, sandY+1) {
+			case c.canMoveTo(sandX-1, sandY+1):
 				sandX--
 				sandY++
-				break
-			}
-
-			if off, _ = c.offGrid(sandX+1, sandY+1); off {
+			case c.offGrid(sandX+1, sandY+1):
 				return true
-			}
-			if c.canMoveTo(sandX+1, sandY+1) {
+			case c.canMoveTo(sandX+1, sandY+1):
 				sandX++
 				sandY++
-				break
+			default:
+				c.sand(sandX, sandY)
+				return false
 			}
-
-			c.grid[sandY][sandX] = Sand
-			return false
 		default:
 			sandY++
 		}
 	}
 }
 
-func (c *Cave) offGrid(x int, y int) (bool, bool) {
+func (c *Cave) offGrid(x int, y int) bool {
 	if c.floor {
-		switch {
-		case x < 0:
-			for i := 0; i < len(c.grid); i++ {
-				c.grid[i] = append([]rune{Empty}, c.grid[i]...)
-			}
-			c.xOffset--
-			return false, true
-		case x > c.maxX:
-			for i := 0; i < len(c.grid); i++ {
-				c.grid[i] = append(c.grid[i], Empty)
-			}
-			return false, false
-		}
+		return false
 	}
-	return x < 0 || x > c.maxX || y > c.maxY, false
+	return x < 0 || x > c.maxX || y > c.maxY
 }
 
 func (c *Cave) canMoveTo(x int, y int) bool {
@@ -135,7 +113,31 @@ func (c *Cave) at(x int, y int) rune {
 	if c.floor && y == c.maxY {
 		return Stone
 	}
+	if x < 0 {
+		if x < c.lSand[y] {
+			return Empty
+		}
+		return Sand
+	}
+	if x > c.maxX {
+		if x > c.rSand[y] {
+			return Empty
+		}
+		return Sand
+	}
 	return c.grid[y][x]
+}
+
+func (c *Cave) sand(x int, y int) {
+	if x < 0 {
+		c.lSand[y] = x
+		return
+	}
+	if x > c.maxX {
+		c.rSand[y] = x
+		return
+	}
+	c.grid[y][x] = Sand
 }
 
 func NewCave(rocks []Rock, floor bool) Cave {
@@ -203,6 +205,8 @@ func NewCave(rocks []Rock, floor bool) Cave {
 		maxY:    maxY,
 		grid:    grid,
 		floor:   floor,
+		lSand:   make([]int, maxY),
+		rSand:   make([]int, maxY),
 	}
 }
 
