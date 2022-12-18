@@ -97,10 +97,10 @@ func TestRecordRange(t *testing.T) {
 		{40, 45},
 	}
 	tests := []struct {
-		start    int
-		end      int
-		maxCoord int
-		after    []Range
+		start int
+		end   int
+		max   int
+		after []Range
 	}{
 		{5, 7, 0, []Range{{5, 7}, {10, 15}, {20, 25}, {40, 45}}},
 		{50, 52, 0, []Range{{10, 15}, {20, 25}, {40, 45}, {50, 52}}},
@@ -126,7 +126,7 @@ func TestRecordRange(t *testing.T) {
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
 			b := make([]Range, len(before))
 			copy(b, before)
-			after := recordRange(b, tt.maxCoord, tt.start, tt.end)
+			after := recordRange(b, tt.max, tt.start, tt.end)
 			assert.Equal(t, tt.after, after)
 		})
 	}

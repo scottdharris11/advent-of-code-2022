@@ -3,7 +3,6 @@ package day15
 import (
 	"log"
 	"regexp"
-	"sync"
 	"time"
 
 	"advent-of-code-2022/utils"
@@ -37,30 +36,23 @@ func solvePart1(lines []string, row int) int {
 	return ans
 }
 
-func solvePart2(lines []string, maxCoord int) int {
+func solvePart2(lines []string, max int) int {
 	start := time.Now().UnixMilli()
 	var sensors []Sensor
 	for _, line := range lines {
 		sensors = append(sensors, *NewSensor(line))
 	}
 
-	rows := make([][]Range, maxCoord+1)
-	wg := sync.WaitGroup{}
-	for row := 0; row <= maxCoord; row++ {
-		r := row
-		wg.Add(1)
-		go func(row int) {
-			defer wg.Done()
-			for _, s := range sensors {
-				rows[row] = MarkNoBeacon(s, row, maxCoord, rows[row])
-			}
-		}(r)
+	rows := make([][]Range, max+1)
+	for row := 0; row <= max; row++ {
+		for _, s := range sensors {
+			rows[row] = MarkNoBeacon(s, row, max, rows[row])
+		}
 	}
-	wg.Wait()
 
 	var beacon *Point
-	for row := 0; row <= maxCoord; row++ {
-		beacon = PossibleBeacon(rows[row], row, maxCoord, sensors)
+	for row := 0; row <= max; row++ {
+		beacon = PossibleBeacon(rows[row], row, max, sensors)
 		if beacon != nil {
 			break
 		}
@@ -80,7 +72,7 @@ type Range struct {
 	end   int
 }
 
-func PossibleBeacon(ranges []Range, row int, maxCoord int, sensors []Sensor) *Point {
+func PossibleBeacon(ranges []Range, row int, max int, sensors []Sensor) *Point {
 	nRanges := ranges
 	if nRanges[0].start != 0 {
 		p := Point{0, row}
@@ -98,7 +90,7 @@ func PossibleBeacon(ranges []Range, row int, maxCoord int, sensors []Sensor) *Po
 		}
 		x = nRanges[i].end
 	}
-	if x+1 <= maxCoord {
+	if x+1 <= max {
 		p := Point{x + 1, row}
 		if !DiscoveredBeacon(p, sensors) {
 			return &p
@@ -148,7 +140,7 @@ func MarkBeacon(p Point, trackRow int, ranges []Range) []Range {
 	return nRanges
 }
 
-func MarkNoBeacon(s Sensor, trackRow int, maxCoord int, ranges []Range) []Range {
+func MarkNoBeacon(s Sensor, trackRow int, max int, ranges []Range) []Range {
 	distance := s.point.ManhattanDistance(s.beacon)
 	x := 0
 	switch {
@@ -160,24 +152,23 @@ func MarkNoBeacon(s Sensor, trackRow int, maxCoord int, ranges []Range) []Range 
 	if x < 0 {
 		return ranges
 	}
-	return recordRange(ranges, maxCoord, s.point.x-x, s.point.x+x)
+	return recordRange(ranges, max, s.point.x-x, s.point.x+x)
 }
 
-func recordRange(ranges []Range, maxCoord int, start int, end int) []Range {
-	if maxCoord > 0 {
-		if start > maxCoord || end < 0 {
+func recordRange(ranges []Range, max int, start int, end int) []Range {
+	if max > 0 {
+		if start > max || end < 0 {
 			return ranges
 		}
 		if start < 0 {
 			start = 0
 		}
-		if end > maxCoord {
-			end = maxCoord
+		if end > max {
+			end = max
 		}
 	}
 
-	nRanges := make([]Range, len(ranges))
-	copy(nRanges, ranges)
+	nRanges := ranges
 	added := false
 	for i := 0; i < len(ranges); i++ {
 		r := ranges[i]
