@@ -15,8 +15,9 @@ type SearchMove struct {
 
 // SearchSolution represents the solution to a particular search path
 type SearchSolution struct {
-	Cost int
-	Path []interface{}
+	Cost     int
+	Path     []interface{}
+	Searched int
 }
 
 // Search provides the ability to find the best path solution
@@ -33,6 +34,7 @@ func (s *Search) Best(init SearchMove) *SearchSolution {
 	cost := make(map[interface{}]int)
 	from := make(map[interface{}]interface{})
 	cost[init] = init.Cost
+	searched := 0
 	var goal interface{}
 	for !searchQueue.Empty() {
 		var current = searchQueue.Next()
@@ -40,6 +42,8 @@ func (s *Search) Best(init SearchMove) *SearchSolution {
 			goal = current
 			break
 		}
+
+		searched++
 
 		for _, next := range s.Searcher.PossibleNextMoves(current) {
 			nCost := cost[current] + next.Cost
@@ -71,7 +75,8 @@ func (s *Search) Best(init SearchMove) *SearchSolution {
 
 	// Print path
 	return &SearchSolution{
-		Cost: cost[goal],
-		Path: path,
+		Cost:     cost[goal],
+		Path:     path,
+		Searched: searched,
 	}
 }
