@@ -13,7 +13,7 @@ type Puzzle struct{}
 func (Puzzle) Solve() {
 	input := utils.ReadLines("day15", "day-15-input.txt")
 	solvePart1(input, 2000000)
-	solvePart2(input, 2000000)
+	solvePart2(input, 4000000)
 }
 
 func solvePart1(lines []string, row int) int {
@@ -22,9 +22,9 @@ func solvePart1(lines []string, row int) int {
 	for _, line := range lines {
 		sensors = append(sensors, *NewSensor(line))
 	}
-	cave := NewCave(row)
+	cave := NewCave()
 	for _, s := range sensors {
-		cave.MarkNoBeacon(s)
+		cave.MarkNoBeacon(s, row)
 	}
 	for _, s := range sensors {
 		cave.MarkBeacon(s.beacon)
@@ -35,11 +35,35 @@ func solvePart1(lines []string, row int) int {
 	return ans
 }
 
-func solvePart2(lines []string, row int) int {
+func solvePart2(lines []string, maxCoord int) int {
 	start := time.Now().UnixMilli()
-	ans := len(lines) + row
+	var sensors []Sensor
+	for _, line := range lines {
+		sensors = append(sensors, *NewSensor(line))
+	}
+
+	cave := NewCave()
+	cave.maxCoord = maxCoord
+	for row := 0; row <= maxCoord; row++ {
+		for _, s := range sensors {
+			cave.MarkNoBeacon(s, row)
+		}
+	}
+
+	var beacon *Point
+	for row := 0; row <= maxCoord; row++ {
+		beacon = cave.PossibleBeacon(row, maxCoord, sensors)
+		if beacon != nil {
+			break
+		}
+	}
+
+	ans := 0
+	if beacon != nil {
+		ans = (4000000 * beacon.x) + beacon.y
+	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 15, Part 2 (%dms): Answer = %d", end-start, ans)
+	log.Printf("Day 15, Part 2 (%dms): Beacon Frequency = %d", end-start, ans)
 	return ans
 }
 
@@ -49,8 +73,44 @@ type Range struct {
 }
 
 type Cave struct {
-	trackRow       int
+	maxCoord       int
 	noBeaconRanges map[int][]Range
+}
+
+func (c *Cave) PossibleBeacon(row int, maxCoord int, sensors []Sensor) *Point {
+	nRanges := c.noBeaconRanges[row]
+	if nRanges[0].start != 0 {
+		p := Point{0, row}
+		if !c.DiscoveredBeacon(p, sensors) {
+			return &p
+		}
+	}
+	x := nRanges[0].end
+	for i := 1; i < len(nRanges); i++ {
+		if nRanges[i].start > x+1 {
+			p := Point{x + 1, row}
+			if !c.DiscoveredBeacon(p, sensors) {
+				return &p
+			}
+		}
+		x = nRanges[i].end
+	}
+	if x+1 <= maxCoord {
+		p := Point{x + 1, row}
+		if !c.DiscoveredBeacon(p, sensors) {
+			return &p
+		}
+	}
+	return nil
+}
+
+func (c *Cave) DiscoveredBeacon(p Point, sensors []Sensor) bool {
+	for _, s := range sensors {
+		if s.beacon == p {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Cave) NoBeaconPoints(row int) int {
@@ -82,22 +142,35 @@ func (c *Cave) MarkBeacon(p Point) {
 	c.noBeaconRanges[p.y] = nRanges
 }
 
-func (c *Cave) MarkNoBeacon(s Sensor) {
+func (c *Cave) MarkNoBeacon(s Sensor, trackRow int) {
 	distance := s.point.ManhattanDistance(s.beacon)
 	x := 0
 	switch {
-	case s.point.y < c.trackRow:
-		x = distance - (c.trackRow - s.point.y)
-	case s.point.y >= c.trackRow:
-		x = distance - (s.point.y - c.trackRow)
+	case s.point.y < trackRow:
+		x = distance - (trackRow - s.point.y)
+	case s.point.y >= trackRow:
+		x = distance - (s.point.y - trackRow)
 	}
 	if x < 0 {
 		return
 	}
-	c.recordRange(c.trackRow, s.point.x-x, s.point.x+x)
+	c.recordRange(trackRow, s.point.x-x, s.point.x+x)
 }
 
 func (c *Cave) recordRange(y int, start int, end int) {
+	if c.maxCoord > 0 {
+		switch {
+		case start < 0:
+			start = 0
+		case start > c.maxCoord:
+			return
+		case end > c.maxCoord:
+			end = c.maxCoord
+		case end < 0:
+			return
+		}
+	}
+
 	nRanges := c.noBeaconRanges[y]
 	added := false
 	for i := 0; i < len(c.noBeaconRanges[y]); i++ {
@@ -151,8 +224,8 @@ func (c *Cave) recordRange(y int, start int, end int) {
 	c.noBeaconRanges[y] = nRanges
 }
 
-func NewCave(trackRow int) *Cave {
-	c := Cave{trackRow: trackRow}
+func NewCave() *Cave {
+	c := Cave{}
 	c.noBeaconRanges = make(map[int][]Range)
 	return &c
 }

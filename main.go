@@ -7,6 +7,7 @@ import (
 	"advent-of-code-2022/day12"
 	"advent-of-code-2022/day13"
 	"advent-of-code-2022/day14"
+	"advent-of-code-2022/day15"
 	"advent-of-code-2022/day2"
 	"advent-of-code-2022/day3"
 	"advent-of-code-2022/day4"
@@ -25,7 +26,7 @@ func main() {
 	solvers := []Solver{
 		day1.Puzzle{}, day2.Puzzle{}, day3.Puzzle{}, day4.Puzzle{}, day5.Puzzle{},
 		day6.Puzzle{}, day7.Puzzle{}, day8.Puzzle{}, day9.Puzzle{}, day10.Puzzle{},
-		day11.Puzzle{}, day12.Puzzle{}, day13.Puzzle{}, day14.Puzzle{},
+		day11.Puzzle{}, day12.Puzzle{}, day13.Puzzle{}, day14.Puzzle{}, day15.Puzzle{},
 	}
 	for _, solver := range solvers {
 		solver.Solve()

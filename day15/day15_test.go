@@ -1,11 +1,12 @@
 package day15
 
 import (
-	"advent-of-code-2022/utils"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"advent-of-code-2022/utils"
 )
 
 var testInput = []string{
@@ -31,8 +32,8 @@ func TestSolvePart1(t *testing.T) {
 }
 
 func TestSolvePart2(t *testing.T) {
-	// assert.Equal(t, 0, solvePart2(testInput, 10))
-	// assert.Equal(t, 0, solvePart2(utils.ReadLines("day15", "day-15-input.txt"), 2000000))
+	assert.Equal(t, 56000011, solvePart2(testInput, 20))
+	assert.Equal(t, 12543202766584, solvePart2(utils.ReadLines("day15", "day-15-input.txt"), 4000000))
 }
 
 func TestCave_NoBeaconPoints(t *testing.T) {
@@ -50,7 +51,7 @@ func TestCave_NoBeaconPoints(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("%v", tt.ranges), func(t *testing.T) {
-			cave := NewCave(11)
+			cave := NewCave()
 			cave.noBeaconRanges[11] = tt.ranges
 			assert.Equal(t, tt.expected, cave.NoBeaconPoints(11))
 		})
@@ -77,7 +78,7 @@ func TestCave_MarkBeacon(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			cave := NewCave(tt.beacon.y)
+			cave := NewCave()
 			b := make([]Range, len(before))
 			copy(b, before)
 			cave.noBeaconRanges[tt.beacon.y] = b
@@ -88,31 +89,10 @@ func TestCave_MarkBeacon(t *testing.T) {
 }
 
 func TestCave_MarkNoBeacon(t *testing.T) {
-	cave := NewCave(11)
+	cave := NewCave()
 	sensor := NewSensor("Sensor at x=8, y=7: closest beacon is at x=2, y=10")
-	cave.MarkNoBeacon(*sensor)
-
-	// assert.Nil(t, cave.noBeaconRanges[-3])
-	// assert.Equal(t, []Range{{8, 8}}, cave.noBeaconRanges[-2])
-	// assert.Equal(t, []Range{{7, 9}}, cave.noBeaconRanges[-1])
-	// assert.Equal(t, []Range{{6, 10}}, cave.noBeaconRanges[0])
-	// assert.Equal(t, []Range{{5, 11}}, cave.noBeaconRanges[1])
-	// assert.Equal(t, []Range{{4, 12}}, cave.noBeaconRanges[2])
-	// assert.Equal(t, []Range{{3, 13}}, cave.noBeaconRanges[3])
-	// assert.Equal(t, []Range{{2, 14}}, cave.noBeaconRanges[4])
-	// assert.Equal(t, []Range{{1, 15}}, cave.noBeaconRanges[5])
-	// assert.Equal(t, []Range{{0, 16}}, cave.noBeaconRanges[6])
-	// assert.Equal(t, []Range{{-1, 17}}, cave.noBeaconRanges[7])
-	// assert.Equal(t, []Range{{0, 16}}, cave.noBeaconRanges[8])
-	// assert.Equal(t, []Range{{1, 15}}, cave.noBeaconRanges[9])
-	// assert.Equal(t, []Range{{2, 14}}, cave.noBeaconRanges[10])
+	cave.MarkNoBeacon(*sensor, 11)
 	assert.Equal(t, []Range{{3, 13}}, cave.noBeaconRanges[11])
-	// assert.Equal(t, []Range{{4, 12}}, cave.noBeaconRanges[12])
-	// assert.Equal(t, []Range{{5, 11}}, cave.noBeaconRanges[13])
-	// assert.Equal(t, []Range{{6, 10}}, cave.noBeaconRanges[14])
-	// assert.Equal(t, []Range{{7, 9}}, cave.noBeaconRanges[15])
-	// assert.Equal(t, []Range{{8, 8}}, cave.noBeaconRanges[16])
-	// assert.Nil(t, cave.noBeaconRanges[17])
 }
 
 func TestCave_RecordRange(t *testing.T) {
@@ -144,7 +124,7 @@ func TestCave_RecordRange(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			cave := NewCave(3)
+			cave := NewCave()
 			b := make([]Range, len(before))
 			copy(b, before)
 			cave.noBeaconRanges[3] = b
