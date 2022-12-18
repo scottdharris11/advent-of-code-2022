@@ -36,7 +36,7 @@ func TestSolvePart2(t *testing.T) {
 	assert.Equal(t, 12543202766584, solvePart2(utils.ReadLines("day15", "day-15-input.txt"), 4000000))
 }
 
-func TestCave_NoBeaconPoints(t *testing.T) {
+func TestNoBeaconPoints(t *testing.T) {
 	tests := []struct {
 		ranges   []Range
 		expected int
@@ -51,14 +51,12 @@ func TestCave_NoBeaconPoints(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("%v", tt.ranges), func(t *testing.T) {
-			cave := NewCave()
-			cave.noBeaconRanges[11] = tt.ranges
-			assert.Equal(t, tt.expected, cave.NoBeaconPoints(11))
+			assert.Equal(t, tt.expected, NoBeaconPoints(tt.ranges))
 		})
 	}
 }
 
-func TestCave_MarkBeacon(t *testing.T) {
+func TestMarkBeacon(t *testing.T) {
 	before := []Range{
 		{10, 15},
 		{20, 25},
@@ -78,58 +76,58 @@ func TestCave_MarkBeacon(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			cave := NewCave()
 			b := make([]Range, len(before))
 			copy(b, before)
-			cave.noBeaconRanges[tt.beacon.y] = b
-			cave.MarkBeacon(tt.beacon)
-			assert.Equal(t, tt.after, cave.noBeaconRanges[tt.beacon.y])
+			after := MarkBeacon(tt.beacon, tt.beacon.y, b)
+			assert.Equal(t, tt.after, after)
 		})
 	}
 }
 
-func TestCave_MarkNoBeacon(t *testing.T) {
-	cave := NewCave()
+func TestMarkNoBeacon(t *testing.T) {
 	sensor := NewSensor("Sensor at x=8, y=7: closest beacon is at x=2, y=10")
-	cave.MarkNoBeacon(*sensor, 11)
-	assert.Equal(t, []Range{{3, 13}}, cave.noBeaconRanges[11])
+	ranges := MarkNoBeacon(*sensor, 11, 0, nil)
+	assert.Equal(t, []Range{{3, 13}}, ranges)
 }
 
-func TestCave_RecordRange(t *testing.T) {
+func TestRecordRange(t *testing.T) {
 	before := []Range{
 		{10, 15},
 		{20, 25},
 		{40, 45},
 	}
 	tests := []struct {
-		start int
-		end   int
-		after []Range
+		start    int
+		end      int
+		maxCoord int
+		after    []Range
 	}{
-		{5, 7, []Range{{5, 7}, {10, 15}, {20, 25}, {40, 45}}},
-		{50, 52, []Range{{10, 15}, {20, 25}, {40, 45}, {50, 52}}},
-		{5, 10, []Range{{5, 15}, {20, 25}, {40, 45}}},
-		{5, 11, []Range{{5, 15}, {20, 25}, {40, 45}}},
-		{18, 23, []Range{{10, 15}, {18, 25}, {40, 45}}},
-		{5, 18, []Range{{5, 18}, {20, 25}, {40, 45}}},
-		{5, 18, []Range{{5, 18}, {20, 25}, {40, 45}}},
-		{5, 23, []Range{{5, 25}, {40, 45}}},
-		{5, 26, []Range{{5, 26}, {40, 45}}},
-		{5, 50, []Range{{5, 50}}},
-		{12, 15, []Range{{10, 15}, {20, 25}, {40, 45}}},
-		{12, 18, []Range{{10, 18}, {20, 25}, {40, 45}}},
-		{12, 30, []Range{{10, 30}, {40, 45}}},
-		{12, 50, []Range{{10, 50}}},
+		{5, 7, 0, []Range{{5, 7}, {10, 15}, {20, 25}, {40, 45}}},
+		{50, 52, 0, []Range{{10, 15}, {20, 25}, {40, 45}, {50, 52}}},
+		{5, 10, 0, []Range{{5, 15}, {20, 25}, {40, 45}}},
+		{5, 11, 0, []Range{{5, 15}, {20, 25}, {40, 45}}},
+		{18, 23, 0, []Range{{10, 15}, {18, 25}, {40, 45}}},
+		{5, 18, 0, []Range{{5, 18}, {20, 25}, {40, 45}}},
+		{5, 18, 0, []Range{{5, 18}, {20, 25}, {40, 45}}},
+		{5, 23, 0, []Range{{5, 25}, {40, 45}}},
+		{5, 26, 0, []Range{{5, 26}, {40, 45}}},
+		{5, 50, 0, []Range{{5, 50}}},
+		{12, 15, 0, []Range{{10, 15}, {20, 25}, {40, 45}}},
+		{12, 18, 0, []Range{{10, 18}, {20, 25}, {40, 45}}},
+		{12, 30, 0, []Range{{10, 30}, {40, 45}}},
+		{12, 50, 0, []Range{{10, 50}}},
+		{55, 65, 50, before},
+		{-4, -2, 50, before},
+		{-4, 5, 50, []Range{{0, 5}, {10, 15}, {20, 25}, {40, 45}}},
+		{49, 55, 50, []Range{{10, 15}, {20, 25}, {40, 45}, {49, 50}}},
 	}
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			cave := NewCave()
 			b := make([]Range, len(before))
 			copy(b, before)
-			cave.noBeaconRanges[3] = b
-			cave.recordRange(3, tt.start, tt.end)
-			assert.Equal(t, tt.after, cave.noBeaconRanges[3])
+			after := recordRange(b, tt.maxCoord, tt.start, tt.end)
+			assert.Equal(t, tt.after, after)
 		})
 	}
 }

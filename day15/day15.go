@@ -3,6 +3,7 @@ package day15
 import (
 	"log"
 	"regexp"
+	"sync"
 	"time"
 
 	"advent-of-code-2022/utils"
@@ -22,14 +23,15 @@ func solvePart1(lines []string, row int) int {
 	for _, line := range lines {
 		sensors = append(sensors, *NewSensor(line))
 	}
-	cave := NewCave()
+
+	var ranges []Range
 	for _, s := range sensors {
-		cave.MarkNoBeacon(s, row)
+		ranges = MarkNoBeacon(s, row, 0, ranges)
 	}
 	for _, s := range sensors {
-		cave.MarkBeacon(s.beacon)
+		ranges = MarkBeacon(s.beacon, row, ranges)
 	}
-	ans := cave.NoBeaconPoints(row)
+	ans := NoBeaconPoints(ranges)
 	end := time.Now().UnixMilli()
 	log.Printf("Day 15, Part 1 (%dms): Beacon Not Present = %d", end-start, ans)
 	return ans
@@ -42,17 +44,23 @@ func solvePart2(lines []string, maxCoord int) int {
 		sensors = append(sensors, *NewSensor(line))
 	}
 
-	cave := NewCave()
-	cave.maxCoord = maxCoord
+	rows := make([][]Range, maxCoord+1)
+	wg := sync.WaitGroup{}
 	for row := 0; row <= maxCoord; row++ {
-		for _, s := range sensors {
-			cave.MarkNoBeacon(s, row)
-		}
+		r := row
+		wg.Add(1)
+		go func(row int) {
+			defer wg.Done()
+			for _, s := range sensors {
+				rows[row] = MarkNoBeacon(s, row, maxCoord, rows[row])
+			}
+		}(r)
 	}
+	wg.Wait()
 
 	var beacon *Point
 	for row := 0; row <= maxCoord; row++ {
-		beacon = cave.PossibleBeacon(row, maxCoord, sensors)
+		beacon = PossibleBeacon(rows[row], row, maxCoord, sensors)
 		if beacon != nil {
 			break
 		}
@@ -72,16 +80,11 @@ type Range struct {
 	end   int
 }
 
-type Cave struct {
-	maxCoord       int
-	noBeaconRanges map[int][]Range
-}
-
-func (c *Cave) PossibleBeacon(row int, maxCoord int, sensors []Sensor) *Point {
-	nRanges := c.noBeaconRanges[row]
+func PossibleBeacon(ranges []Range, row int, maxCoord int, sensors []Sensor) *Point {
+	nRanges := ranges
 	if nRanges[0].start != 0 {
 		p := Point{0, row}
-		if !c.DiscoveredBeacon(p, sensors) {
+		if !DiscoveredBeacon(p, sensors) {
 			return &p
 		}
 	}
@@ -89,7 +92,7 @@ func (c *Cave) PossibleBeacon(row int, maxCoord int, sensors []Sensor) *Point {
 	for i := 1; i < len(nRanges); i++ {
 		if nRanges[i].start > x+1 {
 			p := Point{x + 1, row}
-			if !c.DiscoveredBeacon(p, sensors) {
+			if !DiscoveredBeacon(p, sensors) {
 				return &p
 			}
 		}
@@ -97,14 +100,14 @@ func (c *Cave) PossibleBeacon(row int, maxCoord int, sensors []Sensor) *Point {
 	}
 	if x+1 <= maxCoord {
 		p := Point{x + 1, row}
-		if !c.DiscoveredBeacon(p, sensors) {
+		if !DiscoveredBeacon(p, sensors) {
 			return &p
 		}
 	}
 	return nil
 }
 
-func (c *Cave) DiscoveredBeacon(p Point, sensors []Sensor) bool {
+func DiscoveredBeacon(p Point, sensors []Sensor) bool {
 	for _, s := range sensors {
 		if s.beacon == p {
 			return true
@@ -113,18 +116,21 @@ func (c *Cave) DiscoveredBeacon(p Point, sensors []Sensor) bool {
 	return false
 }
 
-func (c *Cave) NoBeaconPoints(row int) int {
+func NoBeaconPoints(ranges []Range) int {
 	points := 0
-	for _, r := range c.noBeaconRanges[row] {
+	for _, r := range ranges {
 		points += r.end - r.start + 1
 	}
 	return points
 }
 
-func (c *Cave) MarkBeacon(p Point) {
-	nRanges := c.noBeaconRanges[p.y]
-	for i := 0; i < len(c.noBeaconRanges[p.y]); i++ {
-		r := c.noBeaconRanges[p.y][i]
+func MarkBeacon(p Point, trackRow int, ranges []Range) []Range {
+	if p.y != trackRow {
+		return ranges
+	}
+	nRanges := ranges
+	for i := 0; i < len(ranges); i++ {
+		r := ranges[i]
 		if p.x < r.start || p.x > r.end {
 			continue
 		}
@@ -139,10 +145,10 @@ func (c *Cave) MarkBeacon(p Point) {
 			nRanges[i+1] = Range{p.x + 1, r.end}
 		}
 	}
-	c.noBeaconRanges[p.y] = nRanges
+	return nRanges
 }
 
-func (c *Cave) MarkNoBeacon(s Sensor, trackRow int) {
+func MarkNoBeacon(s Sensor, trackRow int, maxCoord int, ranges []Range) []Range {
 	distance := s.point.ManhattanDistance(s.beacon)
 	x := 0
 	switch {
@@ -152,29 +158,29 @@ func (c *Cave) MarkNoBeacon(s Sensor, trackRow int) {
 		x = distance - (s.point.y - trackRow)
 	}
 	if x < 0 {
-		return
+		return ranges
 	}
-	c.recordRange(trackRow, s.point.x-x, s.point.x+x)
+	return recordRange(ranges, maxCoord, s.point.x-x, s.point.x+x)
 }
 
-func (c *Cave) recordRange(y int, start int, end int) {
-	if c.maxCoord > 0 {
-		switch {
-		case start < 0:
+func recordRange(ranges []Range, maxCoord int, start int, end int) []Range {
+	if maxCoord > 0 {
+		if start > maxCoord || end < 0 {
+			return ranges
+		}
+		if start < 0 {
 			start = 0
-		case start > c.maxCoord:
-			return
-		case end > c.maxCoord:
-			end = c.maxCoord
-		case end < 0:
-			return
+		}
+		if end > maxCoord {
+			end = maxCoord
 		}
 	}
 
-	nRanges := c.noBeaconRanges[y]
+	nRanges := make([]Range, len(ranges))
+	copy(nRanges, ranges)
 	added := false
-	for i := 0; i < len(c.noBeaconRanges[y]); i++ {
-		r := c.noBeaconRanges[y][i]
+	for i := 0; i < len(ranges); i++ {
+		r := ranges[i]
 		switch {
 		case end < r.start:
 			nRanges = append(nRanges[:i+1], nRanges[i:]...)
@@ -221,13 +227,7 @@ func (c *Cave) recordRange(y int, start int, end int) {
 	if !added {
 		nRanges = append(nRanges, Range{start, end})
 	}
-	c.noBeaconRanges[y] = nRanges
-}
-
-func NewCave() *Cave {
-	c := Cave{}
-	c.noBeaconRanges = make(map[int][]Range)
-	return &c
+	return nRanges
 }
 
 type Point struct {
