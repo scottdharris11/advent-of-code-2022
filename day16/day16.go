@@ -3,6 +3,7 @@ package day16
 import (
 	"log"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -88,17 +89,27 @@ func (p *Planner) Route() int {
 	if solution == nil {
 		return -1
 	}
-	return solution.Path[len(solution.Path)-1].(State).relief
+
+	prevOpened := ""
+	relief := 0
+	for _, s := range solution.Path {
+		var state = s.(State)
+		if state.openValves != prevOpened {
+			relief += p.valves[state.location].PressureRelief(state.minRemaining)
+			prevOpened = state.openValves
+		}
+	}
+	return relief
 }
 
 func (p *Planner) Goal(state interface{}) bool {
 	var pState = state.(State)
-	return pState.opened == p.reliefValves || pState.minRemaining == 0
+	return pState.minRemaining == 0 || pState.opened() == p.reliefValves
 }
 
 func (p *Planner) DistanceFromGoal(state interface{}) int {
 	var pState = state.(State)
-	return p.reliefValves - pState.opened + pState.minRemaining
+	return p.reliefValves - pState.opened()
 }
 
 func (p *Planner) PossibleNextMoves(state interface{}) []utils.SearchMove {
@@ -109,19 +120,13 @@ func (p *Planner) PossibleNextMoves(state interface{}) []utils.SearchMove {
 	var moves []utils.SearchMove
 	minRemaining := pState.minRemaining - 1
 
-	if v.flow > 0 && !strings.Contains(pState.openValves, v.id) {
-		nOpen := pState.openValves
-		if nOpen != "" {
-			nOpen += "-"
-		}
-		nOpen += v.id
+	if p.canOpen(pState) {
 		nState := State{
 			location:     v.id,
-			opened:       pState.opened + 1,
-			openValves:   nOpen,
+			openValves:   pState.openValves,
 			minRemaining: minRemaining,
-			relief:       pState.relief + v.PressureRelief(minRemaining),
 		}
+		nState.open()
 		moves = append(moves, utils.SearchMove{
 			Cost:  p.moveCost(nState),
 			State: nState,
@@ -131,11 +136,10 @@ func (p *Planner) PossibleNextMoves(state interface{}) []utils.SearchMove {
 	// Add moves into any of the connecting tunnels
 	for _, t := range v.tunnels {
 		nState := State{
-			location:     t,
-			opened:       pState.opened,
+			location: t,
+			//opened:       pState.opened,
 			openValves:   pState.openValves,
 			minRemaining: minRemaining,
-			relief:       pState.relief,
 		}
 		moves = append(moves, utils.SearchMove{
 			Cost:  p.moveCost(nState),
@@ -143,6 +147,11 @@ func (p *Planner) PossibleNextMoves(state interface{}) []utils.SearchMove {
 		})
 	}
 	return moves
+}
+
+func (p *Planner) canOpen(state State) bool {
+	v := p.valves[state.location]
+	return v.flow > 0 && !strings.Contains(state.openValves, v.id)
 }
 
 func (p *Planner) moveCost(state State) int {
@@ -153,13 +162,32 @@ func (p *Planner) moveCost(state State) int {
 		}
 		cost += v.PressureRelief(state.minRemaining)
 	}
+	if p.canOpen(state) {
+		cost -= p.valves[state.location].PressureRelief(state.minRemaining)
+	}
 	return cost
 }
 
 type State struct {
 	location     string
-	opened       int
 	openValves   string
 	minRemaining int
-	relief       int
+}
+
+func (s *State) opened() int {
+	if s.openValves == "" {
+		return 0
+	}
+	return len(strings.Split(s.openValves, "-"))
+}
+
+func (s *State) open() {
+	if s.openValves == "" {
+		s.openValves = s.location
+		return
+	}
+	opened := strings.Split(s.openValves, "-")
+	opened = append(opened, s.location)
+	sort.Strings(opened)
+	s.openValves = strings.Join(opened, "-")
 }

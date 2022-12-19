@@ -23,7 +23,7 @@ var testInput = []string{
 
 func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, 1651, solvePart1(testInput))
-	//assert.Equal(t, 0, solvePart1(utils.ReadLines("day16", "day-16-input.txt")))
+	assert.Equal(t, 0, solvePart1(utils.ReadLines("day16", "day-16-input.txt")))
 }
 
 func TestSolvePart2(t *testing.T) {
