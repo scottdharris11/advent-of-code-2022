@@ -155,15 +155,27 @@ func (p *Planner) canOpen(state State) bool {
 }
 
 func (p *Planner) moveCost(state State) int {
-	cost := 0
+	minutes := state.minRemaining
+	if p.canOpen(state) {
+		minutes--
+	}
+
+	var flows []int
 	for _, v := range p.valves {
-		if v.flow == 0 || strings.Contains(state.openValves, v.id) {
+		if v.flow == 0 || state.location == v.id || strings.Contains(state.openValves, v.id) {
 			continue
 		}
-		cost += v.PressureRelief(state.minRemaining)
+		flows = append(flows, v.flow)
 	}
-	if p.canOpen(state) {
-		cost -= p.valves[state.location].PressureRelief(state.minRemaining)
+	sort.Ints(flows)
+
+	cost := 0
+	for i := len(flows) - 1; i >= 0; i-- {
+		if minutes < 0 {
+			minutes = 0
+		}
+		cost += flows[i] * minutes
+		minutes -= 2
 	}
 	return cost
 }
