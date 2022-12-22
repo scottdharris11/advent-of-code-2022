@@ -12,7 +12,7 @@ var testInput = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
 
 func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, 3068, solvePart1(testInput))
-	assert.Equal(t, 0, solvePart1(utils.ReadLines("day17", "day-17-input.txt")[0]))
+	assert.Equal(t, 3163, solvePart1(utils.ReadLines("day17", "day-17-input.txt")[0]))
 }
 
 func TestRock_CanShiftLeft(t *testing.T) {
