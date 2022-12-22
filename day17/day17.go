@@ -79,8 +79,10 @@ func (r Rock) CanShiftLeft(xOffset int, rows []string) bool {
 		return false
 	}
 	for i := 0; i < r.height; i++ {
-		if r.pattern[i][0] == '#' && rows[i][xOffset-1] == '#' {
-			return false
+		for j := 0; j < r.width; j++ {
+			if r.pattern[i][j] == '#' && rows[i][j+xOffset-1] == '#' {
+				return false
+			}
 		}
 	}
 	return true
@@ -91,8 +93,10 @@ func (r Rock) CanShiftRight(xOffset int, rows []string) bool {
 		return false
 	}
 	for i := 0; i < r.height; i++ {
-		if r.pattern[i][r.width-1] == '#' && rows[i][xOffset+r.width] == '#' {
-			return false
+		for j := 0; j < r.width; j++ {
+			if r.pattern[i][j] == '#' && rows[i][j+xOffset+1] == '#' {
+				return false
+			}
 		}
 	}
 	return true

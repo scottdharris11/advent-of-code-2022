@@ -1,6 +1,7 @@
 package day17
 
 import (
+	"advent-of-code-2022/utils"
 	"fmt"
 	"testing"
 
@@ -11,81 +12,144 @@ var testInput = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
 
 func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, 3068, solvePart1(testInput))
-	// assert.Equal(t, 0, solvePart1(utils.ReadLines("day17", "day-17-input.txt")[0]))
+	assert.Equal(t, 0, solvePart1(utils.ReadLines("day17", "day-17-input.txt")[0]))
 }
 
 func TestRock_CanShiftLeft(t *testing.T) {
-	rock := Rock{height: 3, width: 3, pattern: []string{
+	cross := Rock{height: 3, width: 3, pattern: []string{
 		" # ",
 		"###",
 		" # ",
 	}}
-	rows := []string{
-		"##     ",
-		"#     ",
-		"##     ",
-		"#######",
-	}
+	angle := Rock{height: 3, width: 3, pattern: []string{
+		"  #",
+		"  #",
+		"###",
+	}}
 
 	tests := []struct {
+		rock    Rock
 		rows    []string
 		xOffset int
 		left    bool
 	}{
-		{rows, 0, false},
-		{rows, 1, false},
-		{rows, 2, true},
-		{[]string{
+		{cross, []string{
+			"##     ",
+			"#      ",
+			"##     ",
+			"#######",
+		}, 1, false},
+		{cross, []string{
+			"##     ",
+			"#      ",
+			"##     ",
+			"#######",
+		}, 2, true},
+		{cross, []string{
 			"#      ",
 			"##     ",
 			"#      ",
 			"#######",
 		}, 2, false},
-		{rows, 3, true},
-		{rows, 4, true},
+		{cross, []string{
+			"##     ",
+			"#      ",
+			"##     ",
+			"#######",
+		}, 3, true},
+		{angle, []string{
+			"###    ",
+			"##     ",
+			"       ",
+			"#######",
+		}, 1, false},
+		{angle, []string{
+			"##     ",
+			"##     ",
+			"       ",
+			"#######",
+		}, 1, true},
+		{angle, []string{
+			"##     ",
+			"###    ",
+			"       ",
+			"#######",
+		}, 1, false},
+		{angle, []string{
+			"##     ",
+			"##     ",
+			"#      ",
+			"#######",
+		}, 1, false},
+		{angle, []string{
+			"##     ",
+			"##     ",
+			"#      ",
+			"#######",
+		}, 2, true},
 	}
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			assert.Equal(t, tt.left, rock.CanShiftLeft(tt.xOffset, tt.rows))
+			assert.Equal(t, tt.left, tt.rock.CanShiftLeft(tt.xOffset, tt.rows))
 		})
 	}
 }
 
 func TestRock_CanShiftRight(t *testing.T) {
-	rock := Rock{height: 3, width: 3, pattern: []string{
+	cross := Rock{height: 3, width: 3, pattern: []string{
 		" # ",
 		"###",
 		" # ",
 	}}
-	rows := []string{
-		"     ##",
-		"      #",
-		"     ##",
-		"#######",
-	}
 
 	tests := []struct {
+		rock    Rock
 		rows    []string
 		xOffset int
 		right   bool
 	}{
-		{rows, 0, true},
-		{rows, 1, true},
-		{rows, 2, true},
-		{[]string{
+		{cross, []string{
+			"     ##",
+			"      #",
+			"     ##",
+			"#######",
+		}, 1, true},
+		{cross, []string{
+			"     ##",
+			"      #",
+			"     ##",
+			"#######",
+		}, 2, true},
+		{cross, []string{
 			"      #",
 			"     ##",
 			"      #",
 			"#######",
 		}, 2, false},
-		{rows, 3, false},
-		{rows, 4, false},
+		{cross, []string{
+			"     ##",
+			"      #",
+			"    ###",
+			"#######",
+		}, 2, false},
+		{cross, []string{
+			"    ###",
+			"      #",
+			"     ##",
+			"#######",
+		}, 2, false},
+		{cross, []string{
+			"     ##",
+			"      #",
+			"     ##",
+			"#######",
+		}, 3, false},
 	}
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			assert.Equal(t, tt.right, rock.CanShiftRight(tt.xOffset, tt.rows))
+			assert.Equal(t, tt.right, tt.rock.CanShiftRight(tt.xOffset, tt.rows))
 		})
 	}
 }
