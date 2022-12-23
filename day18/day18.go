@@ -64,13 +64,32 @@ type Cube struct {
 }
 
 func (c *Cube) MarkAdjacent(c2 *Cube) {
-
+	switch {
+	case c.z == c2.z && c.y == c2.y && c.x+1 == c2.x:
+		c.adjacent[1] = c2
+		c2.adjacent[0] = c
+	case c.z == c2.z && c.y == c2.y && c.x-1 == c2.x:
+		c.adjacent[0] = c2
+		c2.adjacent[1] = c
+	case c.z == c2.z && c.x == c2.x && c.y+1 == c2.y:
+		c.adjacent[3] = c2
+		c2.adjacent[2] = c
+	case c.z == c2.z && c.x == c2.x && c.y-1 == c2.y:
+		c.adjacent[2] = c2
+		c2.adjacent[3] = c
+	case c.x == c2.x && c.y == c2.y && c.z+1 == c2.z:
+		c.adjacent[5] = c2
+		c2.adjacent[4] = c
+	case c.x == c2.x && c.y == c2.y && c.z-1 == c2.z:
+		c.adjacent[4] = c2
+		c2.adjacent[5] = c
+	}
 }
 
 func (c *Cube) ExposedSides() int {
 	e := 0
 	for _, c := range c.adjacent {
-		if c != nil {
+		if c == nil {
 			e++
 		}
 	}
