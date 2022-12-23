@@ -31,15 +31,15 @@ func TestSolvePart1(t *testing.T) {
 }
 
 func TestSolvePart2(t *testing.T) {
-	// assert.Equal(t, 0, solvePart2(testInput))
-	// assert.Equal(t, 0, solvePart2(utils.ReadLines("day18", "day-18-input.txt")))
+	assert.Equal(t, 58, solvePart2(testInput))
+	assert.Equal(t, 1986, solvePart2(utils.ReadLines("day18", "day-18-input.txt")))
 }
 
 func TestCube_MarkAdjacent(t *testing.T) {
 	tests := []struct {
 		cube1    *Cube
 		cube2    *Cube
-		adjcanet []bool
+		adjacent []bool
 	}{
 		{
 			&Cube{x: 1, y: 1, z: 1},
@@ -51,7 +51,7 @@ func TestCube_MarkAdjacent(t *testing.T) {
 		tt := tt
 		t.Run(fmt.Sprintf("%v", tt), func(t *testing.T) {
 			tt.cube1.MarkAdjacent(tt.cube2)
-			for i, a := range tt.adjcanet {
+			for i, a := range tt.adjacent {
 				if a {
 					switch i {
 					case 0:
