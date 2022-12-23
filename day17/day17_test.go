@@ -15,6 +15,11 @@ func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, 3163, solvePart1(utils.ReadLines("day17", "day-17-input.txt")[0]))
 }
 
+func TestSolvePart2(t *testing.T) {
+	assert.Equal(t, 1514285714288, solvePart2(testInput))
+	assert.Equal(t, 1560932944615, solvePart2(utils.ReadLines("day17", "day-17-input.txt")[0]))
+}
+
 func TestRock_CanShiftLeft(t *testing.T) {
 	cross := Rock{height: 3, width: 3, pattern: []string{
 		" # ",
@@ -395,6 +400,7 @@ func TestCave_DropRock(t *testing.T) {
 		"    #  ",
 		"    #  ",
 	}, cave.rows)
+	cave.print()
 }
 
 func TestCave_ImpactRows(t *testing.T) {
@@ -534,6 +540,223 @@ func TestCave_AddRock(t *testing.T) {
 			cave.addRock(tt.xOffset, tt.yOffset, tt.rock)
 			assert.Equal(t, tt.after, cave.rows)
 			assert.Equal(t, tt.size, cave.topRock())
+		})
+	}
+}
+
+func TestCave_Prune(t *testing.T) {
+	tests := []struct {
+		before []string
+		after  []string
+		count  int
+	}{
+		{[]string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #    ",
+			" ####  ",
+			"    ## ",
+			"    ## ",
+			"    #  ",
+			"  # #  ",
+			"  # #  ",
+			"#####  ",
+			"  ###  ",
+			"   #   ",
+			"  #### ",
+			"#######",
+		}, []string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #    ",
+			" ####  ",
+			"    ## ",
+			"    ## ",
+			"    #  ",
+			"  # #  ",
+			"  # #  ",
+			"#####  ",
+			"  ###  ",
+			"   #   ",
+			"  #### ",
+			"#######",
+		}, 17},
+		{[]string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #  ##",
+			" ######",
+			"    ## ",
+			"    ## ",
+			"    #  ",
+			"  # #  ",
+			"  # #  ",
+			"#####  ",
+			"  ###  ",
+			"   #   ",
+			"  #### ",
+			"#######",
+		}, []string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #  ##",
+			" ######",
+		}, 17},
+		{[]string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #    ",
+			" ####  ",
+			"    ## ",
+			"    ## ",
+			"    #  ",
+			"  # #  ",
+			"  # #  ",
+			"#####  ",
+			"  ###  ",
+			"   #   ",
+			"  #### ",
+		}, []string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #    ",
+			" ####  ",
+			"    ## ",
+			"    ## ",
+			"    #  ",
+			"  # #  ",
+			"  # #  ",
+			"#####  ",
+			"  ###  ",
+			"   #   ",
+			"  #### ",
+		}, 16},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
+			cave := Cave{width: 7}
+			for i := len(tt.before) - 1; i >= 0; i-- {
+				cave.rows = append(cave.rows, tt.before[i])
+			}
+			var cAfter []string
+			for i := len(tt.after) - 1; i >= 0; i-- {
+				cAfter = append(cAfter, tt.after[i])
+			}
+			cave.prune()
+			assert.Equal(t, cAfter, cave.rows)
+			assert.Equal(t, tt.count, cave.topRock())
+		})
+	}
+}
+
+func TestCave_FollowPath(t *testing.T) {
+	tests := []struct {
+		rows   []string
+		row    int
+		minRow int
+	}{
+		{[]string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #    ",
+			" ####  ",
+			"    ## ",
+			"    ## ",
+			"    #  ",
+			"  # #  ",
+			"  # #  ",
+			"#####  ",
+			"  ###  ",
+			"   #   ",
+			"  #### ",
+			"#######",
+		}, 14, 0},
+		{[]string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #  ##",
+			" ######",
+			"    ## ",
+			"    ## ",
+			"    #  ",
+			"  # #  ",
+			"  # #  ",
+			"#####  ",
+			"  ###  ",
+			"   #   ",
+			"  #### ",
+			"#######",
+		}, 14, 10},
+		{[]string{
+			"    #  ",
+			"    #  ",
+			"    ## ",
+			"##  ## ",
+			"###### ",
+			" ###   ",
+			"  #    ",
+			" ####  ",
+			"    ## ",
+			"    ## ",
+			"    #  ",
+			"  # #  ",
+			"  # #  ",
+			"#####  ",
+			"  ###  ",
+			"   #   ",
+			"  #### ",
+		}, 13, -1},
+		{[]string{
+			"    #  ",
+			"    ## ",
+			"    ###",
+			"#   ## ",
+			"## ### ",
+			" ###   ",
+			"  #    ",
+		}, 3, 1},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
+			cave := Cave{width: 7}
+			for i := len(tt.rows) - 1; i >= 0; i-- {
+				cave.rows = append(cave.rows, tt.rows[i])
+			}
+			assert.Equal(t, tt.minRow, cave.followPath(tt.row))
 		})
 	}
 }
