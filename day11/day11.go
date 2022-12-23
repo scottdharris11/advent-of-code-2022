@@ -126,7 +126,7 @@ func (m *Monkey) applyRelief(worry int64) int64 {
 func NewMonkey(lines []string) *Monkey {
 	m := &Monkey{}
 	m.reliefFactor = 3
-	integers := utils.ReadIntegersFromLine(strings.Split(lines[1], ": ")[1])
+	integers := utils.ReadIntegersFromLine(strings.Split(lines[1], ": ")[1], ", ")
 	for _, i := range integers {
 		m.items = append(m.items, int64(i))
 	}

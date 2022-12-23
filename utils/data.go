@@ -36,8 +36,8 @@ func ReadIntegerGrid(lines []string) [][]int {
 }
 
 // ReadIntegersFromLine parses integers on a single line from csv format
-func ReadIntegersFromLine(line string) []int {
-	sValues := strings.Split(line, ", ")
+func ReadIntegersFromLine(line string, sep string) []int {
+	sValues := strings.Split(line, sep)
 	var values []int
 	for _, sValue := range sValues {
 		values = append(values, Number(sValue))
