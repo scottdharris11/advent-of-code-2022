@@ -19,8 +19,8 @@ func TestSolvePart1(t *testing.T) {
 }
 
 func TestSolvePart2(t *testing.T) {
-	assert.Equal(t, 0, solvePart2(testInput))
-	assert.Equal(t, 0, solvePart2(utils.ReadLines("day19", "day-19-input.txt")))
+	// assert.Equal(t, 3472, solvePart2(testInput))
+	assert.Equal(t, 0, solvePart2(utils.ReadLines("day19", "day-19-input.txt")[0:3]))
 }
 
 func TestNewBlueprint(t *testing.T) {

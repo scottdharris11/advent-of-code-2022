@@ -21,7 +21,7 @@ func solvePart1(lines []string) int {
 	start := time.Now().UnixMilli()
 	ans := 0
 	for _, line := range lines {
-		ans += NewBlueprint(line).QualityLevel()
+		ans += NewBlueprint(line).QualityLevel(24)
 	}
 	end := time.Now().UnixMilli()
 	log.Printf("Day 19, Part 1 (%dms): Quality Level = %d", end-start, ans)
@@ -30,9 +30,12 @@ func solvePart1(lines []string) int {
 
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
-	ans := len(lines)
+	ans := 1
+	for _, line := range lines {
+		ans *= NewBlueprint(line).MaxGeode(32)
+	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 19, Part 2 (%dms): Exterior Sides = %d", end-start, ans)
+	log.Printf("Day 19, Part 2 (%dms): Max Geodes = %d", end-start, ans)
 	return ans
 }
 
@@ -82,18 +85,24 @@ type Blueprint struct {
 	clay     RobotCost
 	obsidian RobotCost
 	geode    RobotCost
+	minutes  int
 }
 
-func (b *Blueprint) QualityLevel() int {
+func (b *Blueprint) QualityLevel(minutes int) int {
+	return b.MaxGeode(minutes) * b.id
+}
+
+func (b *Blueprint) MaxGeode(minutes int) int {
+	b.minutes = minutes
 	m := utils.MaxFinder{Maximizer: b}
 	s, max := m.Max(BlueprintState{oreRobot: 1}, nil, 0)
 	fmt.Printf("ID: %d, Max geode: %d, State: %v\n", b.id, max, s)
-	return max * b.id
+	return max
 }
 
 func (b *Blueprint) Goal(state interface{}) (bool, int) {
 	var bState = state.(BlueprintState)
-	return bState.minute == 24, bState.geode
+	return bState.minute == b.minutes, bState.geode
 }
 
 func (b *Blueprint) PossibleNextStates(state interface{}, currentMax int) []interface{} {
@@ -105,7 +114,7 @@ func (b *Blueprint) PossibleNextStates(state interface{}, currentMax int) []inte
 		moves = append(moves, base)
 		return moves
 	}
-	if !base.canAchieve(currentMax) {
+	if !base.canAchieve(currentMax, b.minutes) {
 		return nil
 	}
 
@@ -205,8 +214,8 @@ func (b BlueprintState) buy(cost RobotCost, parent *BlueprintState) BlueprintSta
 	}
 }
 
-func (b BlueprintState) canAchieve(val int) bool {
-	minutes := 24 - b.minute + 1
+func (b BlueprintState) canAchieve(val int, goalMinutes int) bool {
+	minutes := goalMinutes - b.minute + 1
 	future := b.geodeRobot * minutes
 	future += (minutes * (minutes - 1)) / 2
 	return b.geode+future > val
