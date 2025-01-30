@@ -34,9 +34,22 @@ func solvePart1(lines []string) int {
 
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
-	ans := len(lines)
+	coords, zero := parseCoordinates(lines)
+	count := len(coords)
+	for i := 0; i < 10; i++ {
+		for _, c := range coords {
+			if i == 0 {
+				c.value *= 811589153
+			}
+			move(c, count)
+		}
+	}
+	i1000 := valueAfter(zero, count, 1000)
+	i2000 := valueAfter(zero, count, 2000)
+	i3000 := valueAfter(zero, count, 3000)
+	ans := i1000 + i2000 + i3000
 	end := time.Now().UnixMilli()
-	log.Printf("Day 20, Part 2 (%dms): Answer = %d", end-start, ans)
+	log.Printf("Day 20, Part 2 (%dms): Coordinate = %d", end-start, ans)
 	return ans
 }
 
@@ -74,6 +87,8 @@ func move(c *Coordinate, count int) {
 	if prev {
 		places++
 	}
+	// modulus of count minus 1 since we are moving "positions" and therefore shouldn't
+	// count the moving value as an actual position (this was a real bugger)
 	places %= count - 1
 	if places == 0 {
 		return
