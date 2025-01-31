@@ -12,7 +12,7 @@ import (
 type Puzzle struct{}
 
 func (Puzzle) Solve() {
-	input := utils.ReadLines("day20", "day-20-input.txt")
+	input := utils.ReadLines("day21", "day-21-input.txt")
 	solvePart1(input)
 	solvePart2(input)
 }
@@ -28,6 +28,7 @@ func solvePart1(lines []string) int {
 
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
+	// determine which path to root is from fed from "humn" input
 	var formulas map[string]Formula
 	var values map[string]int
 	values, formulas = parseInput(lines)
@@ -38,18 +39,14 @@ func solvePart2(lines []string) int {
 		_, path = pathToKey("humn", root.key2, formulas)
 		valueKey = root.key1
 	}
-	_, output := computeResult("root", formulas, values)
-	needed := output[valueKey]
+
+	// compute the results like before to determine needed value before root
+	_, values = computeResult("root", formulas, values)
+	needed := values[valueKey]
+
+	// load formulas again (computation deletes them) and work backwards to arrive at human value
 	_, formulas = parseInput(lines)
 	ans := findNecessaryValue(needed, path, formulas, values)
-
-	values, formulas = parseInput(lines)
-	values["humn"] = ans
-	check, _ := computeResult(path[0], formulas, values)
-	if check != needed {
-		log.Printf("Something is wrong with ans %d, return value not matching expected %d != %d", ans, needed, check)
-		ans = -1
-	}
 	end := time.Now().UnixMilli()
 	log.Printf("Day 21, Part 2 (%dms): humn entry = %d", end-start, ans)
 	return ans
@@ -62,6 +59,7 @@ type Formula struct {
 }
 
 func (f Formula) compute(values map[string]int) (bool, int) {
+	// determine if necessary values are available
 	val1, ok := values[f.key1]
 	if !ok {
 		return false, -1
@@ -70,6 +68,8 @@ func (f Formula) compute(values map[string]int) (bool, int) {
 	if !ok {
 		return false, -1
 	}
+
+	// compute when available
 	switch f.operation {
 	case "+":
 		return true, val1 + val2
