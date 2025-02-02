@@ -17,7 +17,7 @@ func (Puzzle) Solve() {
 	solvePart2(input, cubeSides())
 }
 
-type DIRECTION int32
+type DIRECTION rune
 
 var RIGHT = DIRECTION('>')
 var LEFT = DIRECTION('<')
@@ -97,16 +97,12 @@ func (c CubeSide) nextPoint(point Tuple, dir DIRECTION) (Tuple, CubeSide, DIRECT
 	}
 
 	link := c.links[dir]
-	if dir == link.toDir {
-		// wrapping, but moving in same direction
-		move := MOVES[dir]
-		return Tuple{point.x + move.x, point.y + move.y}, link.to, dir
-	}
-
 	topOffset := point.y - c.topLeft.y
 	rightOffset := point.x - c.topLeft.x
 	var next Tuple
 	switch {
+	case dir == UP && link.toDir == UP:
+		next = Tuple{link.to.topLeft.x + rightOffset, link.to.bottomRight.y}
 	case dir == UP && link.toDir == DOWN:
 		next = Tuple{link.to.bottomRight.x - rightOffset, link.to.topLeft.y}
 	case dir == UP && link.toDir == LEFT:
@@ -115,6 +111,8 @@ func (c CubeSide) nextPoint(point Tuple, dir DIRECTION) (Tuple, CubeSide, DIRECT
 		next = Tuple{link.to.topLeft.x, link.to.topLeft.y + rightOffset}
 	case dir == DOWN && link.toDir == UP:
 		next = Tuple{link.to.bottomRight.x - rightOffset, link.to.bottomRight.y}
+	case dir == DOWN && link.toDir == DOWN:
+		next = Tuple{link.to.topLeft.x + rightOffset, link.to.topLeft.y}
 	case dir == DOWN && link.toDir == LEFT:
 		next = Tuple{link.to.bottomRight.x, link.to.topLeft.y + rightOffset}
 	case dir == DOWN && link.toDir == RIGHT:
@@ -123,14 +121,18 @@ func (c CubeSide) nextPoint(point Tuple, dir DIRECTION) (Tuple, CubeSide, DIRECT
 		next = Tuple{link.to.topLeft.x + topOffset, link.to.topLeft.y}
 	case dir == LEFT && link.toDir == UP:
 		next = Tuple{link.to.bottomRight.x - topOffset, link.to.bottomRight.y}
+	case dir == LEFT && link.toDir == LEFT:
+		next = Tuple{link.to.bottomRight.x, link.to.topLeft.y + topOffset}
 	case dir == LEFT && link.toDir == RIGHT:
 		next = Tuple{link.to.topLeft.x, link.to.bottomRight.y - topOffset}
 	case dir == RIGHT && link.toDir == DOWN:
 		next = Tuple{link.to.bottomRight.x - topOffset, link.to.topLeft.y}
 	case dir == RIGHT && link.toDir == UP:
-		next = Tuple{link.to.bottomRight.x - topOffset, link.to.bottomRight.y}
+		next = Tuple{link.to.topLeft.x + topOffset, link.to.bottomRight.y}
 	case dir == RIGHT && link.toDir == LEFT:
 		next = Tuple{link.to.bottomRight.x, link.to.bottomRight.y - topOffset}
+	case dir == RIGHT && link.toDir == RIGHT:
+		next = Tuple{link.to.topLeft.x, link.to.topLeft.y + topOffset}
 	}
 	return next, link.to, link.toDir
 }
@@ -333,35 +335,35 @@ func cubeSides() map[int]CubeSide {
 	side5 := CubeSide{id: 5, topLeft: Tuple{x: 51, y: 101}, bottomRight: Tuple{x: 100, y: 150}, links: make(map[DIRECTION]CubeSideLinkage)}
 	side6 := CubeSide{id: 6, topLeft: Tuple{x: 1, y: 151}, bottomRight: Tuple{x: 50, y: 200}, links: make(map[DIRECTION]CubeSideLinkage)}
 
-	side1.links[DOWN] = CubeSideLinkage{to: side4, toDir: DOWN}
-	side1.links[UP] = CubeSideLinkage{to: side2, toDir: DOWN}
-	side1.links[LEFT] = CubeSideLinkage{to: side3, toDir: DOWN}
-	side1.links[RIGHT] = CubeSideLinkage{to: side6, toDir: LEFT}
+	side1.links[DOWN] = CubeSideLinkage{to: side3, toDir: DOWN}
+	side1.links[UP] = CubeSideLinkage{to: side6, toDir: RIGHT}
+	side1.links[LEFT] = CubeSideLinkage{to: side4, toDir: RIGHT}
+	side1.links[RIGHT] = CubeSideLinkage{to: side2, toDir: RIGHT}
 
-	side2.links[DOWN] = CubeSideLinkage{to: side5, toDir: UP}
-	side2.links[UP] = CubeSideLinkage{to: side1, toDir: DOWN}
-	side2.links[LEFT] = CubeSideLinkage{to: side6, toDir: UP}
-	side2.links[RIGHT] = CubeSideLinkage{to: side3, toDir: RIGHT}
+	side2.links[DOWN] = CubeSideLinkage{to: side3, toDir: LEFT}
+	side2.links[UP] = CubeSideLinkage{to: side6, toDir: UP}
+	side2.links[LEFT] = CubeSideLinkage{to: side1, toDir: LEFT}
+	side2.links[RIGHT] = CubeSideLinkage{to: side5, toDir: LEFT}
 
-	side3.links[DOWN] = CubeSideLinkage{to: side5, toDir: RIGHT}
-	side3.links[UP] = CubeSideLinkage{to: side1, toDir: RIGHT}
-	side3.links[LEFT] = CubeSideLinkage{to: side2, toDir: LEFT}
-	side3.links[RIGHT] = CubeSideLinkage{to: side4, toDir: RIGHT}
+	side3.links[DOWN] = CubeSideLinkage{to: side5, toDir: DOWN}
+	side3.links[UP] = CubeSideLinkage{to: side1, toDir: UP}
+	side3.links[LEFT] = CubeSideLinkage{to: side4, toDir: DOWN}
+	side3.links[RIGHT] = CubeSideLinkage{to: side2, toDir: UP}
 
-	side4.links[DOWN] = CubeSideLinkage{to: side5, toDir: DOWN}
-	side4.links[UP] = CubeSideLinkage{to: side1, toDir: UP}
-	side4.links[LEFT] = CubeSideLinkage{to: side3, toDir: LEFT}
-	side4.links[RIGHT] = CubeSideLinkage{to: side6, toDir: DOWN}
+	side4.links[DOWN] = CubeSideLinkage{to: side6, toDir: DOWN}
+	side4.links[UP] = CubeSideLinkage{to: side3, toDir: RIGHT}
+	side4.links[LEFT] = CubeSideLinkage{to: side1, toDir: RIGHT}
+	side4.links[RIGHT] = CubeSideLinkage{to: side5, toDir: RIGHT}
 
-	side5.links[DOWN] = CubeSideLinkage{to: side2, toDir: UP}
-	side5.links[UP] = CubeSideLinkage{to: side4, toDir: UP}
-	side5.links[LEFT] = CubeSideLinkage{to: side3, toDir: UP}
-	side5.links[RIGHT] = CubeSideLinkage{to: side6, toDir: RIGHT}
+	side5.links[DOWN] = CubeSideLinkage{to: side6, toDir: LEFT}
+	side5.links[UP] = CubeSideLinkage{to: side3, toDir: UP}
+	side5.links[LEFT] = CubeSideLinkage{to: side4, toDir: LEFT}
+	side5.links[RIGHT] = CubeSideLinkage{to: side2, toDir: LEFT}
 
-	side6.links[DOWN] = CubeSideLinkage{to: side2, toDir: RIGHT}
-	side6.links[UP] = CubeSideLinkage{to: side4, toDir: LEFT}
-	side6.links[LEFT] = CubeSideLinkage{to: side5, toDir: LEFT}
-	side6.links[RIGHT] = CubeSideLinkage{to: side1, toDir: LEFT}
+	side6.links[DOWN] = CubeSideLinkage{to: side2, toDir: DOWN}
+	side6.links[UP] = CubeSideLinkage{to: side4, toDir: UP}
+	side6.links[LEFT] = CubeSideLinkage{to: side1, toDir: DOWN}
+	side6.links[RIGHT] = CubeSideLinkage{to: side5, toDir: UP}
 
 	sides[1] = side1
 	sides[2] = side2

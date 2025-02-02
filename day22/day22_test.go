@@ -31,8 +31,8 @@ func TestSolvePart1(t *testing.T) {
 }
 
 func TestSolvePart2(t *testing.T) {
-	//assert.Equal(t, 5031, solvePart2(testInput, sampleCubeSides()))
-	assert.Equal(t, 0, solvePart2(utils.ReadLines("day22", "day-22-input.txt"), cubeSides()))
+	assert.Equal(t, 5031, solvePart2(testInput, sampleCubeSides()))
+	assert.Equal(t, 15410, solvePart2(utils.ReadLines("day22", "day-22-input.txt"), cubeSides()))
 }
 
 func sampleCubeSides() map[int]CubeSide {
