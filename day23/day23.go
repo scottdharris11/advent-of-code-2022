@@ -2,7 +2,6 @@ package day23
 
 import (
 	"log"
-	"reflect"
 	"time"
 
 	"advent-of-code-2022/utils"
@@ -16,24 +15,10 @@ func (Puzzle) Solve() {
 	solvePart2(input)
 }
 
-var LOOKS = []Look{
-	{checks: [][]int{{0, -1}, {1, -1}, {-1, -1}}, move: []int{0, -1}},
-	{checks: [][]int{{0, 1}, {1, 1}, {-1, 1}}, move: []int{0, 1}},
-	{checks: [][]int{{-1, 0}, {-1, -1}, {-1, 1}}, move: []int{-1, 0}},
-	{checks: [][]int{{1, 0}, {1, -1}, {1, 1}}, move: []int{1, 0}},
-}
-
 func solvePart1(lines []string) int {
 	start := time.Now().UnixMilli()
 	elves := parseInput(lines)
-	li := 0
-	for i := 0; i < 10; i++ {
-		var looks []Look
-		looks = append(looks, LOOKS[li:]...)
-		looks = append(looks, LOOKS[:li]...)
-		li = (li + 1) % len(LOOKS)
-		elves = doRound(elves, looks)
-	}
+	_, elves = placeElves(elves, 10)
 	ans := countEmpty(elves)
 	end := time.Now().UnixMilli()
 	log.Printf("Day 23, Part 1 (%dms): Empty Space = %d", end-start, ans)
@@ -43,20 +28,7 @@ func solvePart1(lines []string) int {
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
 	elves := parseInput(lines)
-	li := 0
-	round := 1
-	for {
-		var looks []Look
-		looks = append(looks, LOOKS[li:]...)
-		looks = append(looks, LOOKS[:li]...)
-		li = (li + 1) % len(LOOKS)
-		ne := doRound(elves, looks)
-		if reflect.DeepEqual(elves, ne) {
-			break
-		}
-		elves = ne
-		round++
-	}
+	round, _ := placeElves(elves, -1)
 	end := time.Now().UnixMilli()
 	log.Printf("Day 23, Part 2 (%dms): Round = %d", end-start, round)
 	return round
@@ -65,6 +37,16 @@ func solvePart2(lines []string) int {
 type Elf struct {
 	x int
 	y int
+}
+
+func (e Elf) clear(elves map[Elf]bool, locs [][]int) bool {
+	for _, adjust := range locs {
+		ce := Elf{e.x + adjust[0], e.y + adjust[1]}
+		if _, ok := elves[ce]; ok {
+			return false
+		}
+	}
+	return true
 }
 
 type Look struct {
@@ -84,43 +66,56 @@ func parseInput(lines []string) map[Elf]bool {
 	return elves
 }
 
-func doRound(elves map[Elf]bool, looks []Look) map[Elf]bool {
-	done := make(map[Elf]bool)
-	proposed := make(map[Elf]Elf)
-	for elf := range elves {
-		inVicinity := false
-		for _, adjust := range [][]int{{0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}} {
-			ce := Elf{elf.x + adjust[0], elf.y + adjust[1]}
-			if _, ok := elves[ce]; ok {
-				inVicinity = true
-				break
-			}
+var AllAround = [][]int{{0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}}
+var LOOKS = []Look{
+	{checks: [][]int{{0, -1}, {1, -1}, {-1, -1}}, move: []int{0, -1}},
+	{checks: [][]int{{0, 1}, {1, 1}, {-1, 1}}, move: []int{0, 1}},
+	{checks: [][]int{{-1, 0}, {-1, -1}, {-1, 1}}, move: []int{-1, 0}},
+	{checks: [][]int{{1, 0}, {1, -1}, {1, 1}}, move: []int{1, 0}},
+}
+
+func placeElves(elves map[Elf]bool, rounds int) (int, map[Elf]bool) {
+	li := 0
+	round := 1
+	for {
+		var looks []Look
+		looks = append(looks, LOOKS[li:]...)
+		looks = append(looks, LOOKS[:li]...)
+		li = (li + 1) % len(LOOKS)
+		updated, ne := doRound(elves, looks)
+		elves = ne
+		if !updated || round == rounds {
+			break
 		}
-		if !inVicinity {
+		round++
+	}
+	return round, elves
+}
+
+func doRound(elves map[Elf]bool, looks []Look) (bool, map[Elf]bool) {
+	done := make(map[Elf]bool, len(elves))
+	proposed := make(map[Elf]Elf, len(elves))
+	updated := 0
+	for elf := range elves {
+		if elf.clear(elves, AllAround) {
 			done[elf] = true
 			continue
 		}
 
 		couldPropose := false
 		for _, look := range looks {
-			found := false
-			for _, check := range look.checks {
-				ce := Elf{elf.x + check[0], elf.y + check[1]}
-				if _, ok := elves[ce]; ok {
-					found = true
-					break
-				}
-			}
-			if !found {
+			if elf.clear(elves, look.checks) {
 				ce := Elf{elf.x + look.move[0], elf.y + look.move[1]}
 				if pe, ok := proposed[ce]; ok {
 					delete(done, ce)
 					done[pe] = true
+					updated--
 					break
 				}
 				done[ce] = true
 				proposed[ce] = elf
 				couldPropose = true
+				updated++
 				break
 			}
 		}
@@ -129,7 +124,7 @@ func doRound(elves map[Elf]bool, looks []Look) map[Elf]bool {
 			done[elf] = true
 		}
 	}
-	return done
+	return updated > 0, done
 }
 
 func countEmpty(elves map[Elf]bool) int {
@@ -137,10 +132,7 @@ func countEmpty(elves map[Elf]bool) int {
 	first := true
 	for elf := range elves {
 		if first {
-			minX = elf.x
-			maxX = elf.x
-			minY = elf.y
-			maxY = elf.y
+			minX, maxX, minY, maxY = elf.x, elf.x, elf.y, elf.y
 			first = false
 			continue
 		}
