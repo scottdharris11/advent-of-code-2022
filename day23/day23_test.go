@@ -39,6 +39,7 @@ func TestSolvePart1(t *testing.T) {
 }
 
 func TestSolvePart2(t *testing.T) {
-	assert.Equal(t, 0, solvePart2(testInput))
-	assert.Equal(t, 0, solvePart2(utils.ReadLines("day23", "day-23-input.txt")))
+	assert.Equal(t, 4, solvePart2(testInput))
+	assert.Equal(t, 20, solvePart2(testInput2))
+	assert.Equal(t, 1079, solvePart2(utils.ReadLines("day23", "day-23-input.txt")))
 }

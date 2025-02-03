@@ -2,6 +2,7 @@ package day23
 
 import (
 	"log"
+	"reflect"
 	"time"
 
 	"advent-of-code-2022/utils"
@@ -35,16 +36,30 @@ func solvePart1(lines []string) int {
 	}
 	ans := countEmpty(elves)
 	end := time.Now().UnixMilli()
-	log.Printf("Day 23, Part 1 (%dms): Answer = %d", end-start, ans)
+	log.Printf("Day 23, Part 1 (%dms): Empty Space = %d", end-start, ans)
 	return ans
 }
 
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
-	ans := len(lines)
+	elves := parseInput(lines)
+	li := 0
+	round := 1
+	for {
+		var looks []Look
+		looks = append(looks, LOOKS[li:]...)
+		looks = append(looks, LOOKS[:li]...)
+		li = (li + 1) % len(LOOKS)
+		ne := doRound(elves, looks)
+		if reflect.DeepEqual(elves, ne) {
+			break
+		}
+		elves = ne
+		round++
+	}
 	end := time.Now().UnixMilli()
-	log.Printf("Day 23, Part 2 (%dms): Answer = %d", end-start, ans)
-	return ans
+	log.Printf("Day 23, Part 2 (%dms): Round = %d", end-start, round)
+	return round
 }
 
 type Elf struct {
