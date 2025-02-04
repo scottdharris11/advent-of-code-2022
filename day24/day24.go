@@ -18,17 +18,24 @@ func (Puzzle) Solve() {
 func solvePart1(lines []string) int {
 	start := time.Now().UnixMilli()
 	rp := parseInput(lines)
-	ans := rp.Route()
+	ans := rp.Route(RouteState{minutes: 0, loc: rp.start})
 	end := time.Now().UnixMilli()
-	log.Printf("Day 24, Part 1 (%dms): Answer = %d", end-start, ans)
+	log.Printf("Day 24, Part 1 (%dms): Minutes = %d", end-start, ans)
 	return ans
 }
 
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
-	ans := len(lines)
+	rp := parseInput(lines)
+	vStart := rp.start
+	vGoal := rp.goal
+	ans := rp.Route(RouteState{minutes: 0, loc: vStart})
+	rp.goal = vStart
+	ans += rp.Route(RouteState{minutes: ans, loc: vGoal})
+	rp.goal = vGoal
+	ans += rp.Route(RouteState{minutes: ans, loc: vStart})
 	end := time.Now().UnixMilli()
-	log.Printf("Day 24, Part 2 (%dms): Round = %d", end-start, ans)
+	log.Printf("Day 24, Part 2 (%dms): Minutes = %d", end-start, ans)
 	return ans
 }
 
@@ -87,18 +94,18 @@ func (b BlizzardState) nextMinute(rp RoutePlanner) BlizzardState {
 }
 
 type RoutePlanner struct {
-	start     RouteState
+	start     Tuple
 	goal      Tuple
 	max       Tuple
 	walls     map[Tuple]bool
 	blizzards map[int]BlizzardState
 }
 
-func (r *RoutePlanner) Route() int {
+func (r *RoutePlanner) Route(start RouteState) int {
 	search := utils.Search{Searcher: r}
 	solution := search.Best(utils.SearchMove{
 		Cost:  0,
-		State: r.start,
+		State: start,
 	})
 	if solution == nil {
 		return -1
@@ -181,7 +188,7 @@ func parseInput(lines []string) RoutePlanner {
 		}
 	}
 	return RoutePlanner{
-		start:     RouteState{minutes: 0, loc: *start},
+		start:     *start,
 		goal:      goal,
 		max:       max,
 		walls:     walls,
