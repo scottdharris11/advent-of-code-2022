@@ -140,28 +140,25 @@ type BlueprintState struct {
 	geode         int
 }
 
-func (b BlueprintState) nextMoves(bp Blueprint) []BlueprintState {
+func (b BlueprintState) nextBuyStates(bp Blueprint, remain int) []BlueprintState {
 	var moves []BlueprintState
-	if b.shouldBuyGeodeRobot(bp) {
-		moves = append(moves, b.buyGeodeRobot(bp.geode))
+	state := b.buyGeodeNextState(bp, remain)
+	if state != nil {
+		moves = append(moves, *state)
 	}
-	if b.shouldBuyObsidianRobot(bp) {
-		moves = append(moves, b.buyObsidianRobot(bp.obsidian))
+	state = b.buyObsidianNextState(bp, remain)
+	if state != nil {
+		moves = append(moves, *state)
 	}
-	if b.shouldBuyClayRobot(bp) {
-		moves = append(moves, b.buyClayRobot(bp.clay))
+	state = b.buyClayNextState(bp, remain)
+	if state != nil {
+		moves = append(moves, *state)
 	}
-	if b.shouldBuyOreRobot(bp) {
-		moves = append(moves, b.buyOreRobot(bp.ore))
+	state = b.buyOreNextState(bp, remain)
+	if state != nil {
+		moves = append(moves, *state)
 	}
-	moves = append(moves, b.advanceMinute())
 	return moves
-}
-
-func (b BlueprintState) canBuy(cost RobotCost) bool {
-	return b.ore >= cost.ore &&
-		b.clay >= cost.clay &&
-		b.obsidian >= cost.obsidian
 }
 
 func (b BlueprintState) advanceMinute() BlueprintState {
@@ -178,48 +175,106 @@ func (b BlueprintState) advanceMinute() BlueprintState {
 	}
 }
 
-func (b BlueprintState) shouldBuyOreRobot(bp Blueprint) bool {
-	return b.oreRobot < bp.maxOre && b.canBuy(bp.ore)
+func (b BlueprintState) buyOreNextState(bp Blueprint, remain int) *BlueprintState {
+	if b.oreRobot == bp.maxOre {
+		return nil
+	}
+	bs := b.buyNextState(bp.ore, remain)
+	if bs == nil {
+		return nil
+	}
+	bs.oreRobot++
+	return bs
 }
 
-func (b BlueprintState) buyOreRobot(cost RobotCost) BlueprintState {
+func (b BlueprintState) buyClayNextState(bp Blueprint, remain int) *BlueprintState {
+	if b.clayRobot == bp.maxClay {
+		return nil
+	}
+	bs := b.buyNextState(bp.clay, remain)
+	if bs == nil {
+		return nil
+	}
+	bs.clayRobot++
+	return bs
+}
+
+func (b BlueprintState) buyObsidianNextState(bp Blueprint, remain int) *BlueprintState {
+	if b.obsidianRobot == bp.maxObsidian {
+		return nil
+	}
+	bs := b.buyNextState(bp.obsidian, remain)
+	if bs == nil {
+		return nil
+	}
+	bs.obsidianRobot++
+	return bs
+}
+
+func (b BlueprintState) buyGeodeNextState(bp Blueprint, remain int) *BlueprintState {
+	bs := b.buyNextState(bp.geode, remain)
+	if bs == nil {
+		return nil
+	}
+	bs.geodeRobot++
+	return bs
+}
+
+func (b BlueprintState) buyNextState(rc RobotCost, remain int) *BlueprintState {
+	if rc.ore > 0 && b.oreRobot == 0 {
+		return nil
+	}
+	if rc.clay > 0 && b.clayRobot == 0 {
+		return nil
+	}
+	if rc.obsidian > 0 && b.obsidianRobot == 0 {
+		return nil
+	}
+
+	steps := 1
+	if rc.ore > 0 && b.ore < rc.ore {
+		oreDiff := rc.ore - b.ore
+		oreSteps := (oreDiff / b.oreRobot) + 1
+		if oreDiff%b.oreRobot > 0 {
+			oreSteps++
+		}
+		if oreSteps > steps {
+			steps = oreSteps
+		}
+	}
+
+	if rc.clay > 0 && b.clay < rc.clay {
+		clayDiff := rc.clay - b.clay
+		claySteps := (clayDiff / b.clayRobot) + 1
+		if clayDiff%b.clayRobot > 0 {
+			claySteps++
+		}
+		if claySteps > steps {
+			steps = claySteps
+		}
+	}
+
+	if rc.obsidian > 0 && b.obsidian < rc.obsidian {
+		obDiff := rc.obsidian - b.obsidian
+		obSteps := (obDiff / b.obsidianRobot) + 1
+		if obDiff%b.obsidianRobot > 0 {
+			obSteps++
+		}
+		if obSteps > steps {
+			steps = obSteps
+		}
+	}
+
+	if steps >= remain {
+		return nil
+	}
+
 	s := b.advanceMinute()
-	s = s.buy(cost)
-	s.oreRobot++
-	return s
-}
-
-func (b BlueprintState) shouldBuyClayRobot(bp Blueprint) bool {
-	return b.clayRobot < bp.maxClay && b.canBuy(bp.clay)
-}
-
-func (b BlueprintState) buyClayRobot(cost RobotCost) BlueprintState {
-	s := b.advanceMinute()
-	s = s.buy(cost)
-	s.clayRobot++
-	return s
-}
-
-func (b BlueprintState) shouldBuyObsidianRobot(bp Blueprint) bool {
-	return b.obsidianRobot < bp.maxObsidian && b.canBuy(bp.obsidian)
-}
-
-func (b BlueprintState) buyObsidianRobot(cost RobotCost) BlueprintState {
-	s := b.advanceMinute()
-	s = s.buy(cost)
-	s.obsidianRobot++
-	return s
-}
-
-func (b BlueprintState) shouldBuyGeodeRobot(bp Blueprint) bool {
-	return b.canBuy(bp.geode)
-}
-
-func (b BlueprintState) buyGeodeRobot(cost RobotCost) BlueprintState {
-	s := b.advanceMinute()
-	s = s.buy(cost)
-	s.geodeRobot++
-	return s
+	for i := 1; i < steps; i++ {
+		s = s.advanceMinute()
+	}
+	s = s.buy(rc)
+	return &s
 }
 
 func (b BlueprintState) buy(cost RobotCost) BlueprintState {
@@ -244,15 +299,25 @@ func (b BlueprintState) possibleGeodes(remain int) int {
 	return geodes
 }
 
-func maxGeodes(remain int, b BlueprintState, bp Blueprint, best int) int {
-	if remain == 0 {
+func maxGeodes(minutes int, b BlueprintState, bp Blueprint, best int) int {
+	remain := minutes - b.minute
+	if remain <= 0 {
 		return b.geode
 	}
 	if best > 0 && b.possibleGeodes(remain) < best {
 		return -1
 	}
-	for _, next := range b.nextMoves(bp) {
-		g := maxGeodes(remain-1, next, bp, best)
+	buys := b.nextBuyStates(bp, remain)
+	if len(buys) == 0 {
+		// no more buys, advance to the end with current robots
+		next := b.advanceMinute()
+		for r := 1; r < remain; r++ {
+			next = next.advanceMinute()
+		}
+		return next.geode
+	}
+	for _, next := range buys {
+		g := maxGeodes(minutes, next, bp, best)
 		if g > 0 && g > best {
 			best = g
 		}
