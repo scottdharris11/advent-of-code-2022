@@ -1,7 +1,6 @@
 package day19
 
 import (
-	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -21,7 +20,9 @@ func solvePart1(lines []string) int {
 	start := time.Now().UnixMilli()
 	ans := 0
 	for _, line := range lines {
-		ans += NewBlueprint(line).QualityLevel(24)
+		bp := NewBlueprint(line)
+		mg := maxGeodes(24, BlueprintState{oreRobot: 1}, bp, -1)
+		ans += bp.qualityLevel(mg)
 	}
 	end := time.Now().UnixMilli()
 	log.Printf("Day 19, Part 1 (%dms): Quality Level = %d", end-start, ans)
@@ -30,9 +31,15 @@ func solvePart1(lines []string) int {
 
 func solvePart2(lines []string) int {
 	start := time.Now().UnixMilli()
+	trimmed := lines
+	if len(lines) > 3 {
+		trimmed = lines[:3]
+	}
 	ans := 1
-	for _, line := range lines {
-		ans *= NewBlueprint(line).MaxGeode(32)
+	for _, line := range trimmed {
+		bp := NewBlueprint(line)
+		mg := maxGeodes(32, BlueprintState{oreRobot: 1}, bp, -1)
+		ans *= mg
 	}
 	end := time.Now().UnixMilli()
 	log.Printf("Day 19, Part 2 (%dms): Max Geodes = %d", end-start, ans)
@@ -65,84 +72,63 @@ type RobotCost struct {
 
 var blueprintParser = regexp.MustCompile(`Blueprint ([\d]+): ([^.]+). ([^.]+). ([^.]+). ([^.]+).`)
 
-func NewBlueprint(line string) *Blueprint {
+func NewBlueprint(line string) Blueprint {
 	match := blueprintParser.FindStringSubmatch(line)
-	if match == nil {
-		return nil
+	oreCost := NewRobotCost(match[2])
+	maxOre, maxClay, maxObsidian := maxCosts(oreCost, 0, 0, 0)
+	clayCost := NewRobotCost(match[3])
+	maxOre, maxClay, maxObsidian = maxCosts(clayCost, maxOre, maxClay, maxObsidian)
+	obsidianCost := NewRobotCost(match[4])
+	maxOre, maxClay, maxObsidian = maxCosts(obsidianCost, maxOre, maxClay, maxObsidian)
+	geodeCost := NewRobotCost(match[5])
+	maxOre, maxClay, maxObsidian = maxCosts(geodeCost, maxOre, maxClay, maxObsidian)
+	return Blueprint{
+		id:          utils.Number(match[1]),
+		ore:         oreCost,
+		maxOre:      maxOre,
+		clay:        clayCost,
+		maxClay:     maxClay,
+		obsidian:    obsidianCost,
+		maxObsidian: maxObsidian,
+		geode:       geodeCost,
 	}
-	return &Blueprint{
-		id:       utils.Number(match[1]),
-		ore:      NewRobotCost(match[2]),
-		clay:     NewRobotCost(match[3]),
-		obsidian: NewRobotCost(match[4]),
-		geode:    NewRobotCost(match[5]),
+}
+
+func maxCosts(rc RobotCost, maxOre int, maxClay int, maxObsidian int) (int, int, int) {
+	or := maxOre
+	if rc.ore > or {
+		or = rc.ore
 	}
+	cl := maxClay
+	if rc.clay > cl {
+		cl = rc.clay
+	}
+	ob := maxObsidian
+	if rc.obsidian > ob {
+		ob = rc.obsidian
+	}
+	return or, cl, ob
 }
 
 type Blueprint struct {
-	id       int
-	ore      RobotCost
-	clay     RobotCost
-	obsidian RobotCost
-	geode    RobotCost
-	minutes  int
+	id          int
+	ore         RobotCost
+	maxOre      int
+	clay        RobotCost
+	maxClay     int
+	obsidian    RobotCost
+	maxObsidian int
+	geode       RobotCost
 }
 
-func (b *Blueprint) QualityLevel(minutes int) int {
-	return b.MaxGeode(minutes) * b.id
-}
-
-func (b *Blueprint) MaxGeode(minutes int) int {
-	b.minutes = minutes
-	m := utils.MaxFinder{Maximizer: b}
-	s, max := m.Max(BlueprintState{oreRobot: 1}, nil, 0)
-	fmt.Printf("ID: %d, Max geode: %d, State: %v\n", b.id, max, s)
-	return max
-}
-
-func (b *Blueprint) Goal(state interface{}) (bool, int) {
-	var bState = state.(BlueprintState)
-	return bState.minute == b.minutes, bState.geode
-}
-
-func (b *Blueprint) PossibleNextStates(state interface{}, currentMax int) []interface{} {
-	var bState = state.(BlueprintState)
-
-	var moves []interface{}
-	base := bState.advanceMinute()
-	if goal, _ := b.Goal(base); goal {
-		moves = append(moves, base)
-		return moves
+func (b Blueprint) qualityLevel(geodeCnt int) int {
+	if geodeCnt < 0 {
+		return 0
 	}
-	if !base.canAchieve(currentMax, b.minutes) {
-		return nil
-	}
-
-	buyCnt := 0
-	if bState.canBuy(b.geode) {
-		buyCnt++
-		moves = append(moves, base.buyGeodeRobot(b.geode, &bState))
-	}
-	if base.minute < 23 && bState.canBuy(b.obsidian) {
-		buyCnt++
-		moves = append(moves, base.buyObsidianRobot(b.obsidian, &bState))
-	}
-	if base.minute < 22 && bState.canBuy(b.clay) {
-		buyCnt++
-		moves = append(moves, base.buyClayRobot(b.clay, &bState))
-	}
-	if base.minute < 23 && bState.canBuy(b.ore) {
-		buyCnt++
-		moves = append(moves, base.buyOreRobot(b.ore, &bState))
-	}
-	if buyCnt < 4 {
-		moves = append(moves, base)
-	}
-	return moves
+	return geodeCnt * b.id
 }
 
 type BlueprintState struct {
-	parent        *BlueprintState
 	minute        int
 	oreRobot      int
 	ore           int
@@ -154,9 +140,32 @@ type BlueprintState struct {
 	geode         int
 }
 
+func (b BlueprintState) nextMoves(bp Blueprint) []BlueprintState {
+	var moves []BlueprintState
+	if b.shouldBuyGeodeRobot(bp) {
+		moves = append(moves, b.buyGeodeRobot(bp.geode))
+	}
+	if b.shouldBuyObsidianRobot(bp) {
+		moves = append(moves, b.buyObsidianRobot(bp.obsidian))
+	}
+	if b.shouldBuyClayRobot(bp) {
+		moves = append(moves, b.buyClayRobot(bp.clay))
+	}
+	if b.shouldBuyOreRobot(bp) {
+		moves = append(moves, b.buyOreRobot(bp.ore))
+	}
+	moves = append(moves, b.advanceMinute())
+	return moves
+}
+
+func (b BlueprintState) canBuy(cost RobotCost) bool {
+	return b.ore >= cost.ore &&
+		b.clay >= cost.clay &&
+		b.obsidian >= cost.obsidian
+}
+
 func (b BlueprintState) advanceMinute() BlueprintState {
 	return BlueprintState{
-		parent:        &b,
 		minute:        b.minute + 1,
 		oreRobot:      b.oreRobot,
 		ore:           b.ore + b.oreRobot,
@@ -169,39 +178,52 @@ func (b BlueprintState) advanceMinute() BlueprintState {
 	}
 }
 
-func (b BlueprintState) canBuy(cost RobotCost) bool {
-	return b.ore >= cost.ore &&
-		b.clay >= cost.clay &&
-		b.obsidian >= cost.obsidian
+func (b BlueprintState) shouldBuyOreRobot(bp Blueprint) bool {
+	return b.oreRobot < bp.maxOre && b.canBuy(bp.ore)
 }
 
-func (b BlueprintState) buyOreRobot(cost RobotCost, parent *BlueprintState) BlueprintState {
-	s := b.buy(cost, parent)
+func (b BlueprintState) buyOreRobot(cost RobotCost) BlueprintState {
+	s := b.advanceMinute()
+	s = s.buy(cost)
 	s.oreRobot++
 	return s
 }
 
-func (b BlueprintState) buyClayRobot(cost RobotCost, parent *BlueprintState) BlueprintState {
-	s := b.buy(cost, parent)
+func (b BlueprintState) shouldBuyClayRobot(bp Blueprint) bool {
+	return b.clayRobot < bp.maxClay && b.canBuy(bp.clay)
+}
+
+func (b BlueprintState) buyClayRobot(cost RobotCost) BlueprintState {
+	s := b.advanceMinute()
+	s = s.buy(cost)
 	s.clayRobot++
 	return s
 }
 
-func (b BlueprintState) buyObsidianRobot(cost RobotCost, parent *BlueprintState) BlueprintState {
-	s := b.buy(cost, parent)
+func (b BlueprintState) shouldBuyObsidianRobot(bp Blueprint) bool {
+	return b.obsidianRobot < bp.maxObsidian && b.canBuy(bp.obsidian)
+}
+
+func (b BlueprintState) buyObsidianRobot(cost RobotCost) BlueprintState {
+	s := b.advanceMinute()
+	s = s.buy(cost)
 	s.obsidianRobot++
 	return s
 }
 
-func (b BlueprintState) buyGeodeRobot(cost RobotCost, parent *BlueprintState) BlueprintState {
-	s := b.buy(cost, parent)
+func (b BlueprintState) shouldBuyGeodeRobot(bp Blueprint) bool {
+	return b.canBuy(bp.geode)
+}
+
+func (b BlueprintState) buyGeodeRobot(cost RobotCost) BlueprintState {
+	s := b.advanceMinute()
+	s = s.buy(cost)
 	s.geodeRobot++
 	return s
 }
 
-func (b BlueprintState) buy(cost RobotCost, parent *BlueprintState) BlueprintState {
+func (b BlueprintState) buy(cost RobotCost) BlueprintState {
 	return BlueprintState{
-		parent:        parent,
 		minute:        b.minute,
 		oreRobot:      b.oreRobot,
 		ore:           b.ore - cost.ore,
@@ -214,9 +236,26 @@ func (b BlueprintState) buy(cost RobotCost, parent *BlueprintState) BlueprintSta
 	}
 }
 
-func (b BlueprintState) canAchieve(val int, goalMinutes int) bool {
-	minutes := goalMinutes - b.minute + 1
-	future := b.geodeRobot * minutes
-	future += (minutes * (minutes - 1)) / 2
-	return b.geode+future > val
+func (b BlueprintState) possibleGeodes(remain int) int {
+	geodes := b.geode + (b.geodeRobot * remain)
+	for g := remain - 1; g > 0; g-- {
+		geodes += g
+	}
+	return geodes
+}
+
+func maxGeodes(remain int, b BlueprintState, bp Blueprint, best int) int {
+	if remain == 0 {
+		return b.geode
+	}
+	if best > 0 && b.possibleGeodes(remain) < best {
+		return -1
+	}
+	for _, next := range b.nextMoves(bp) {
+		g := maxGeodes(remain-1, next, bp, best)
+		if g > 0 && g > best {
+			best = g
+		}
+	}
+	return best
 }

@@ -1,11 +1,10 @@
 package day19
 
 import (
+	"advent-of-code-2022/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"advent-of-code-2022/utils"
 )
 
 var testInput = []string{
@@ -19,8 +18,8 @@ func TestSolvePart1(t *testing.T) {
 }
 
 func TestSolvePart2(t *testing.T) {
-	// assert.Equal(t, 3472, solvePart2(testInput))
-	assert.Equal(t, 0, solvePart2(utils.ReadLines("day19", "day-19-input.txt")[0:3]))
+	assert.Equal(t, 3472, solvePart2(testInput))
+	assert.Equal(t, 2240, solvePart2(utils.ReadLines("day19", "day-19-input.txt")[0:3]))
 }
 
 func TestNewBlueprint(t *testing.T) {
@@ -52,7 +51,7 @@ func TestNewBlueprint(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.line, func(t *testing.T) {
-			assert.Equal(t, tt.blueprint, *NewBlueprint(tt.line))
+			assert.Equal(t, tt.blueprint, NewBlueprint(tt.line))
 		})
 	}
 }
