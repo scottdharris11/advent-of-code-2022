@@ -2,7 +2,6 @@ package day16
 
 import (
 	"advent-of-code-2022/utils"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,22 +27,5 @@ func TestSolvePart1(t *testing.T) {
 
 func TestSolvePart2(t *testing.T) {
 	assert.Equal(t, 1707, solvePart2(testInput))
-	assert.Equal(t, 0, solvePart2(utils.ReadLines("day16", "day-16-input.txt")))
-}
-
-func TestValve_PressureRelief(t *testing.T) {
-	tests := []struct {
-		valve   Valve
-		minutes int
-		relief  int
-	}{
-		{Valve{id: "BB", flow: 13}, 28, 364},
-		{Valve{id: "CC", flow: 2}, 26, 52},
-	}
-	for i, tt := range tests {
-		tt := tt
-		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			assert.Equal(t, tt.relief, tt.valve.PressureRelief(tt.minutes))
-		})
-	}
+	assert.Equal(t, 2213, solvePart2(utils.ReadLines("day16", "day-16-input.txt")))
 }
